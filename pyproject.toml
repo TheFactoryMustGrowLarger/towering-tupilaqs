@@ -1,12 +1,13 @@
 [tool.poetry]
-name = "Name"
+name = "Towering tupilaqs"
 version = "0.1.0"
-description = ""
+description = "Quiz game to determine if a piece of code is a bug or a feature for Python Discord Code Jam 2022"
 authors = ["Author 1 <email@mail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
 python = "3.10.*"
+fastapi = "^0.79.0"
 
 [tool.poetry.dev-dependencies]
 # Base tools
