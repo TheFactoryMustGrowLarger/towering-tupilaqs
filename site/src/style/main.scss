@@ -1,0 +1,21 @@
+@import "variables";
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+    user-select: none;
+}
+
+body {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 100vh;
+
+  .App{
+    min-height: 100vh;
+
+  }
+}
