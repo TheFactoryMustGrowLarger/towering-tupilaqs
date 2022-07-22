@@ -50,16 +50,25 @@ def initiate_database() -> None:
             conn.commit()
 
 
-def insert_question(question: str, answer: str, votes: int = 0) -> None:
+def insert_question(
+        question: str,
+        answer: str,
+        title: str = "title",
+        expl: str = "explanation",
+        diff: int = 0,
+        votes: int = 0) -> None:
     """**Insert a record database.**
 
     :param question:
     :param answer:
+    :param title:
+    :param expl:
+    :param diff:
     :param votes:
     """
     q_sql = '''
-        INSERT INTO questions (TEXT, IDENT, VOTES)
-        VALUES (%s, %s, %s)
+        INSERT INTO questions (TEXT, TITLE, EXPL, DIFFICULTY, IDENT, VOTES)
+        VALUES (%s, %s, %s, %s, %s, %s)
     '''
     a_sql = '''
         INSERT INTO answers (ANSWER, IDENT)
@@ -76,9 +85,7 @@ def insert_question(question: str, answer: str, votes: int = 0) -> None:
                 cur.execute(q_sql, q_data)
                 cur.execute(a_sql, a_data)
                 conn.commit()
-    except psycopg.DataError as e:
-        print(e)
-    except psycopg.ProgrammingError as e:
+    except psycopg.DatabaseError as e:
         print(e)
 
 
@@ -122,3 +129,7 @@ def delete_user(uuid: UUID) -> bool:
     :return:
     """
     pass
+
+
+initiate_database()
+insert_question("test", "test", 0)
