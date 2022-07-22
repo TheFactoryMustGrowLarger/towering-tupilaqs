@@ -10,13 +10,16 @@ def initiate_database() -> None:
     Initiates database with two tables for 'questions' and 'answers'
     all questions and answers have a unique ID and
     an identifier using UUID for join.
+
+    This should only be ran once to make necessary tables or if
+    you want to recreate it for any reason.
     """
     questions_table = '''
         CREATE TABLE QUESTIONS(
             ID SERIAL PRIMARY KEY,
             TXT TEXT NOT NULL,
-            TITLE CHAR(50) NOT NULL,
-            EXPL CHAR(200) NOT NULL,
+            TITLE CHAR(25) NOT NULL,
+            EXPL CHAR(30) NOT NULL,
             DIFFICULTY SMALLINT NOT NULL,
             IDENT VARCHAR(100) NOT NULL,
             VOTES SMALLINT
@@ -100,6 +103,7 @@ def insert_question(
                     }
                 )
                 conn.commit()
+                print("Added {0} to the database with UUID {1}.".format(title, unique_id))
     except psycopg.DataError as e:
         # Better error handling needed
         print(e)
@@ -108,7 +112,7 @@ def insert_question(
 def delete_question(uuid: str) -> bool:
     """**Deletes a record from the DB.**
 
-    :param uuid:
+    :param uuid: Needs to be in string format for comparison
     :return:
     """
     try:
@@ -150,7 +154,7 @@ def delete_question(uuid: str) -> bool:
 def update_question(uuid: str) -> bool:
     """**Update a record in the DB.**
 
-    :param uuid:
+    :param uuid: Needs to be in string format for comparison
     :return:
     """
     try:
@@ -168,7 +172,8 @@ def update_question(uuid: str) -> bool:
 def get_question(uuid: str) -> list:
     """**Return a question based on uuid**
 
-    :return:
+    :param uuid: Needs to be in string format for comparison
+    :return: A list with the question corresponding to the uuid provided
     """
     try:
         with psycopg.connect(**config()) as conn:
@@ -208,7 +213,8 @@ def get_all_questions() -> list:
     try:
         with psycopg.connect(**config()) as conn:
             with conn.cursor() as cur:
-                v = cur.execute("""
+                v = cur.execute(
+                    """
                     SELECT
                         questions.title,
                         questions.expl,
@@ -222,7 +228,8 @@ def get_all_questions() -> list:
                         answers
                     ON
                         answers.ident = questions.ident
-                """).fetchall()
+                """
+                ).fetchall()
                 return v
     except psycopg.DataError as e:
         # Better error handling needed
@@ -247,6 +254,7 @@ def add_user() -> None:
 def delete_user(uuid: str) -> bool:
     """**Delete a user by UUID.**
 
+    :param uuid: Needs to be in string format for comparison
     :return:
     """
     try:
@@ -259,3 +267,17 @@ def delete_user(uuid: str) -> bool:
         # Better error handling needed
         print(e)
         return False
+
+
+# initiate_database()
+#
+# for i in range(1, 10):
+#     insert_question(
+#         question="question{0}".format(i),
+#         answer="answer{0}".format(i),
+#         title="title{0}".format(i),
+#         expl="expl{0}".format(i),
+#     )
+
+
+# delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd")
