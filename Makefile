@@ -6,3 +6,7 @@ lint:
 
 test:
 	poetry run python -m doctest example/equal.py
+
+install:
+	poetry install
+	poetry run pre-commit install
