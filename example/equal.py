@@ -7,7 +7,7 @@ def equal_v1(a, b):
     True
     >>> equal_v1({'key':1}, {'key':2})
     False
-    
+
     #>>> equal_v1(1, 1)
     #True
     """
