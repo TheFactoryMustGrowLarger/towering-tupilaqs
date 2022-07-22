@@ -1,0 +1,26 @@
+.box{
+  width: 100%;
+  color: white;
+  box-shadow: white 0px 8px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  height: max-content;
+  width: max-content;
+  background-color:#202d4a;
+  border-radius: 5px;
+  box-shadow: rgba(3, 102, 214, 0.3) 0px 0px 0px 3px;
+  .title{
+    font-style: italic;
+  }
+  .code-snippet{
+    width: inherit;
+  }
+  .buttons{
+    margin: 10px;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+}
