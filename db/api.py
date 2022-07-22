@@ -1,4 +1,4 @@
-from uuid import UUID, uuid1
+from uuid import uuid1
 
 import psycopg
 from config import config
@@ -14,7 +14,7 @@ def initiate_database() -> None:
     questions_table = '''
         CREATE TABLE QUESTIONS(
             ID SERIAL PRIMARY KEY,
-            TEXT VARCHAR(500) NOT NULL,
+            TXT TEXT NOT NULL,
             TITLE CHAR(50) NOT NULL,
             EXPL CHAR(200) NOT NULL,
             DIFFICULTY SMALLINT NOT NULL,
@@ -25,7 +25,7 @@ def initiate_database() -> None:
     answers_table = '''
         CREATE TABLE ANSWERS(
             ID SERIAL PRIMARY KEY,
-            ANSWER VARCHAR(500) NOT NULL,
+            ANSWER TEXT NOT NULL,
             IDENT VARCHAR(100) NOT NULL
         )
     '''
@@ -53,10 +53,11 @@ def initiate_database() -> None:
 def insert_question(
         question: str,
         answer: str,
-        title: str = "title",
-        expl: str = "explanation",
+        title: str,
+        expl: str,
         diff: int = 0,
-        votes: int = 0) -> None:
+        votes: int = 0
+) -> None:
     """**Insert a record database.**
 
     :param question:
@@ -66,53 +67,166 @@ def insert_question(
     :param diff:
     :param votes:
     """
-    q_sql = '''
-        INSERT INTO questions (TEXT, TITLE, EXPL, DIFFICULTY, IDENT, VOTES)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    '''
-    a_sql = '''
-        INSERT INTO answers (ANSWER, IDENT)
-        VALUES (%s, %s)
-    '''
     unique_id = uuid1()
-
-    q_data = (question, unique_id, votes)
-    a_data = (answer, unique_id)
 
     try:
         with psycopg.connect(**config()) as conn:
             with conn.cursor() as cur:
-                cur.execute(q_sql, q_data)
-                cur.execute(a_sql, a_data)
+                cur.execute(
+                    """
+                    INSERT INTO
+                        questions (TXT, TITLE, EXPL, DIFFICULTY, VOTES, IDENT)
+                    VALUES
+                        ( %(question)s, %(title)s, %(expl)s, %(diff)s, %(votes)s, %(ident)s )
+                """, {
+                        'question': question,
+                        'title': title,
+                        'expl': expl,
+                        'diff': diff,
+                        'votes': votes,
+                        'ident': unique_id,
+                    }
+                )
+
+                cur.execute(
+                    """
+                    INSERT INTO
+                        answers ( ANSWER, IDENT )
+                    VALUES
+                        ( %(answer)s, %(ident)s )
+                """, {
+                        'answer': answer,
+                        'ident': unique_id,
+                    }
+                )
                 conn.commit()
-    except psycopg.DatabaseError as e:
+    except psycopg.DataError as e:
+        # Better error handling needed
         print(e)
 
 
-def delete_question(uuid: UUID) -> bool:
+def delete_question(uuid: str) -> bool:
     """**Deletes a record from the DB.**
 
     :param uuid:
     :return:
     """
-    pass
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    DELETE
+                    FROM
+                        questions
+                    WHERE
+                        ident= %(ident)s
+                """, {
+                        'ident': uuid,
+                    }
+                )
+                cur.execute(
+                    """
+                    DELETE
+                    FROM
+                        answers
+                    WHERE
+                        ident= %(ident)s
+                """, {
+                        'ident': uuid,
+                    }
+                )
+                conn.commit()
+                if cur.rowcount > 0:
+                    return True
+                else:
+                    return False
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
+        return False
 
 
-def update_question(uuid: UUID) -> str:
+def update_question(uuid: str) -> bool:
     """**Update a record in the DB.**
 
     :param uuid:
     :return:
     """
-    pass
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                cur.execute("")
+                conn.commit()
+                return True
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
+        return False
 
 
-def get_question() -> None:
-    """**Return a question based on ??**
+def get_question(uuid: str) -> list:
+    """**Return a question based on uuid**
 
     :return:
     """
-    pass
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                v = cur.execute(
+                    """
+                    SELECT
+                        questions.title,
+                        questions.expl,
+                        questions.txt,
+                        answers.answer,
+                        questions.difficulty,
+                        questions.votes
+                    from
+                        questions
+                    INNER JOIN
+                        answers
+                    ON
+                        questions.ident=answers.ident
+                    AND
+                        questions.ident = %(ident)s
+                """, {
+                        'ident': uuid,
+                    }
+                ).fetchone()
+                return v
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
+
+
+def get_all_questions() -> list:
+    """**Returns all questions+answers from database.**
+
+    :return:
+    """
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                v = cur.execute("""
+                    SELECT
+                        questions.title,
+                        questions.expl,
+                        questions.txt,
+                        answers.answer,
+                        questions.difficulty,
+                        questions.votes
+                    FROM
+                        questions
+                    INNER JOIN
+                        answers
+                    ON
+                        answers.ident = questions.ident
+                """).fetchall()
+                return v
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
 
 
 def add_user() -> None:
@@ -120,16 +234,28 @@ def add_user() -> None:
 
     :return:
     """
-    pass
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                cur.execute("")
+                conn.commit()
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
 
 
-def delete_user(uuid: UUID) -> bool:
+def delete_user(uuid: str) -> bool:
     """**Delete a user by UUID.**
 
     :return:
     """
-    pass
-
-
-initiate_database()
-insert_question("test", "test", 0)
+    try:
+        with psycopg.connect(**config()) as conn:
+            with conn.cursor() as cur:
+                cur.execute("")
+                conn.commit()
+                return True
+    except psycopg.DataError as e:
+        # Better error handling needed
+        print(e)
+        return False
