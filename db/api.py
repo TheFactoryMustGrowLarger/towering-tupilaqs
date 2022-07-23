@@ -159,12 +159,11 @@ def delete_question(uuid: str) -> bool:
                 return False
 
 
-def update_question(uuid: str, question: str = "", answer: str = "") -> bool:
-    """**Update a record in the DB.**
+def update_question_text(uuid: str, text: str) -> bool:
+    """**Update QUESTION `TEXT`**
 
     :param uuid: Needs to be in string format for comparison
-    :param question:
-    :param answer:
+    :param text:
     :return:
     """
     with conn_singleton() as conn:
@@ -172,12 +171,138 @@ def update_question(uuid: str, question: str = "", answer: str = "") -> bool:
             cur.execute(
                 """
                 UPDATE
-                    question
+                    questions
                 SET
-
+                    txt = %(text)s
                 WHERE
                     ident = %(ident)s
             """, {
+                    'text': text,
+                    'ident': uuid,
+                }
+            )
+            return True
+
+
+def update_question_title(uuid: str, title: str) -> bool:
+    """**Update QUESTION `TITLE`.**
+
+    :param uuid: Needs to be in string format for comparison
+    :param title:
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    questions
+                SET
+                    title = %(title)s
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'title': title,
+                    'ident': uuid,
+                }
+            )
+            return True
+
+
+def update_question_explanation(uuid: str, expl: str) -> bool:
+    """**Update QUESTION `EXPLANATION`.**
+
+    :param uuid: Needs to be in string format for comparison
+    :param expl:
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    questions
+                SET
+                    expl = %(expl)s
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'expl': expl,
+                    'ident': uuid,
+                }
+            )
+            return True
+
+
+def update_question_difficulty(uuid: str, diff: int) -> bool:
+    """**Update QUESTION `DIFFICULTY`.**
+
+    :param uuid: Needs to be in string format for comparison
+    :param diff:
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    questions
+                SET
+                    difficulty = %(diff)s
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'diff': diff,
+                    'ident': uuid,
+                }
+            )
+            return True
+
+
+def update_question_votes(uuid: str, votes: int) -> bool:
+    """**Update QUESTION `VOTES`.**
+
+    :param uuid: Needs to be in string format for comparison
+    :param votes:
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    questions
+                SET
+                    votes = %(votes)s
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'votes': votes,
+                    'ident': uuid,
+                }
+            )
+            return True
+
+
+def update_answer_text(uuid: str, text: str) -> bool:
+    """**Update ANSWER `TEXT`.**
+
+    :param uuid: Needs to be in string format for comparison
+    :param text:
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    answers
+                SET
+                    answer = %(text)s
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'text': text,
                     'ident': uuid,
                 }
             )
