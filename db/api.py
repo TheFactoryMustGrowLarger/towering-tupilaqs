@@ -50,7 +50,9 @@ def initiate_database() -> None:
     users_table = '''
         CREATE TABLE USERS(
             ID SERIAL PRIMARY KEY,
-            CORRECT_ANSWERS VARCHAR(500)
+            USER_NAME VARCHAR(30) NOT NULL,
+            CORRECT_ANSWERS TEXT,
+            IDENT VARCHAR(100) NOT NULL
         )
     '''
     with connect(**config()) as conn:
