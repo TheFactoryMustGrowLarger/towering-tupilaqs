@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Quiz - Bug, Feature or Tupilaqs</title>
+    </head>
+    <body>
+        <h1>WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
+        <form action="" onsubmit="solveQuiz(event)">
+            <label>Username: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
+            <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+            <button onclick="connect(event)">Connect</button>
+            <hr>
+            <div id='solveQuestionText'>
+            </div>
+            <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
+            <button>Send</button>
+        </form>
+
+        <ul id='messages'>
+        </ul>
+        <script>
+        var ws = null;
+        var solve_question_text = document.getElementById("solveQuestionText")
+        solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
+
+            function connect(event) {
+                var itemId = document.getElementById("itemId")
+                var token = document.getElementById("token")
+                ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
+
+                const request = {
+                  type: "serve_new_question",
+                };
+                ws.send(JSON.stringify(request))
+
+                ws.onmessage = function(event) {
+                    console.log(event.data)
+                    const data_parsed = JSON.parse(event.data)
+                    switch (data_parsed.type) {
+                      case "solve_question_text":
+                        solve_question_text.innerHTML = data_parsed.data
+                        break;
+                      default:
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('li')
+                        var content = document.createTextNode(data_parsed.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                  }
+                  event.preventDefault()
+                  }
+                };
+
+            function solveQuiz(event) {
+                var input = document.getElementById("userAnswer")
+                var question = document.getElementById("solveQuestionText")
+                const response = {
+                  type: "new_answer",
+                  question: question.value,
+                  user_answer: input.value,
+                };
+                ws.send(JSON.stringify(response))
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
