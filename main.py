@@ -100,59 +100,62 @@ html_quiz_solve_page = """
             <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
             <button onclick="connect(event)">Connect</button>
             <hr>
-            <div id='solveQuestionText'>
-            </div>
+            <div id='solveQuestionText'></div>
             <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
             <button>Send</button>
         </form>
-
         <ul id='messages'>
         </ul>
         <script>
+        console.log("Starting")
         var ws = null;
         var solve_question_text = document.getElementById("solveQuestionText")
         solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
 
-            function connect(event) {
-                var itemId = document.getElementById("itemId")
-                var token = document.getElementById("token")
-                ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
+        function connect(event) {
+          event.preventDefault()
+          var itemId = document.getElementById("itemId")
+          var token = document.getElementById("token")
+          ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
+          ws.onopen = function(event) {
+            const request = {
+              type: "serve_new_question",
+            };
+            ws.send(JSON.stringify(request))
+          };
 
-                const request = {
-                  type: "serve_new_question",
-                };
-                ws.send(JSON.stringify(request))
-
-                ws.onmessage = function(event) {
-                    console.log(event.data)
-                    const data_parsed = JSON.parse(event.data)
-                    switch (data_parsed.type) {
-                      case "solve_question_text":
-                        solve_question_text.innerHTML = data_parsed.data
-                        break;
-                      default:
-                        var messages = document.getElementById('messages')
-                        var message = document.createElement('li')
-                        var content = document.createTextNode(data_parsed.data)
-                        message.appendChild(content)
-                        messages.appendChild(message)
-                  }
-                  event.preventDefault()
-                  }
-                };
-
-            function solveQuiz(event) {
-                var input = document.getElementById("userAnswer")
-                var question = document.getElementById("solveQuestionText")
-                const response = {
-                  type: "new_answer",
-                  question: question.value,
-                  user_answer: input.value,
-                };
-                ws.send(JSON.stringify(response))
-                input.value = ''
-                event.preventDefault()
+          ws.onmessage = function(event) {
+            event.preventDefault()
+            console.log(event.data)
+            const data_parsed = JSON.parse(event.data)
+            switch (data_parsed.type) {
+              case "solve_question_text":
+                solve_question_text.innerHTML = data_parsed.data
+                break;
+              default:
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(data_parsed.data)
+                message.appendChild(content)
+                messages.appendChild(message)
             }
+          };
+        }
+
+        function solveQuiz(event) {
+            event.preventDefault()
+            var input = document.getElementById("userAnswer")
+            var question = document.getElementById("solveQuestionText")
+            const response = {
+              type: "new_answer",
+              question: question.innerHTML,
+              user_answer: input.value,
+            };
+            ws.send(JSON.stringify(response))
+            input.value = ''
+
+        }
+
         </script>
     </body>
 </html>
@@ -169,7 +172,16 @@ def process_new_question(user, event):
 
 def process_serve_new_question(user, event):
     """Takes in a json event (content ignored for now) and requests a new question from the database"""
-    return database.serve_new_question(user)
+    question, correct_answer = database.serve_new_question(user)
+    # FIXME: keep track of answer?
+    return question
+
+
+def process_new_answer(user, event):
+    """Takes in a json event with a user answer and sends to database"""
+    return database.record_user_answer(user,
+                                       question=event['question'],
+                                       answer=event['user_answer'])
 
 
 @app.get("/")
@@ -208,13 +220,24 @@ async def websocket_endpoint_quiz(
     """Responds to messages posted by user by echoing them back with the token_id"""
     await websocket.accept()
     while True:
-        data = await websocket.receive_text()
+        try:
+            data = await websocket.receive_text()
+        except Exception as e:
+            logger.exception('receive_text failed: %s', e)
+            break
+
         logger.debug('received %s', data)
 
         # Parse what the frontend sent
         event = json.loads(data)
         if event['type'] == 'serve_new_question':
-            process_serve_new_question(user=item_id, event=event)
+            # Fetch a new question from database and send back to frontend
+            new_question = process_serve_new_question(user=item_id, event=event)
+            d = dict(type="solve_question_text", data=new_question)
+            await websocket.send_json(d)
+        if event['type'] == 'new_answer':
+            # User has submitted a result, FIXME: send back if correct or not
+            process_new_answer(user=item_id, event=event)
         else:
             logger.error('Unrecognized type "%s"', event['type'])
 

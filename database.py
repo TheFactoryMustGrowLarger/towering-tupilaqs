@@ -24,6 +24,7 @@ def serve_new_question(user):
     Returns question, correct_answer
     """
     question, correct_answer = questions[0]
+    logger.info('Serving a new question to user %s, correct answer %s:\n"""%s"""', user, correct_answer, question)
     return question, correct_answer
 
 
@@ -33,5 +34,8 @@ def record_user_answer(user, question, answer):
     'Bug',
     'Feature',
     'Upvote'
+
+    FIXME: Return if correct or not
     """
-    print('record_user_answer(%s, %s)' % (user, answer))
+    logger.info('record_user_answer(%s, %s, """%s""")' % (user, answer, question))
+    return False
