@@ -136,7 +136,7 @@ def delete_question(uuid: str) -> bool:
                 FROM
                     questions
                 WHERE
-                    ident= %(ident)s
+                    ident = %(ident)s
             """, {
                     'ident': uuid,
                 }
@@ -147,7 +147,7 @@ def delete_question(uuid: str) -> bool:
                 FROM
                     answers
                 WHERE
-                    ident= %(ident)s
+                    ident = %(ident)s
             """, {
                     'ident': uuid,
                 }
