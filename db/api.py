@@ -465,6 +465,14 @@ def _(user_name: str) -> bool:
 
 # print(add_user("testing"))
 # if delete_user("testing"):
-#     print("yeeted")
+#     print("yeet-ed")
 
 # print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
+
+# _id = "abdff6b1-0a4d-11ed-8eb0-f6aec268b9bd"
+# update_question_text(_id, text="testdad")
+# update_answer_text(_id, text="testing")
+# update_question_votes(_id, votes=10)
+# update_question_title(_id, title="new title")
+# update_question_difficulty(_id, diff=4)
+# update_question_explanation(_id, expl="new expl")
