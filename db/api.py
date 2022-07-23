@@ -316,14 +316,17 @@ def _(user_name: str) -> bool:
 
 
 # initiate_database()
-#
+
 # for i in range(1, 10):
-#     insert_question(
+#     print(insert_question(
 #         question="question{0}".format(i),
 #         answer="answer{0}".format(i),
 #         title="title{0}".format(i),
 #         expl="expl{0}".format(i),
-#     )
+#     ))
 
+# print(add_user("testing"))
+# if delete_user("testing"):
+#     print("yeeted")
 
-# delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd")
+# print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
