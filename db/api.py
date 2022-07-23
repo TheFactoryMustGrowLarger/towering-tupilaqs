@@ -237,14 +237,29 @@ def get_all_questions() -> list[Combined]:
         return results
 
 
-def add_user() -> None:
+def add_user(user_name: str) -> str:
     """**Add a new user to the database.**
 
-    :return:
+    :param user_name: it's a username
+    :return: A string - if it successfully added a row
     """
+    unique_id = uuid1()
     with conn_singleton() as conn:
         with conn.cursor() as cur:
-            cur.execute("")
+            cur.execute(
+                """
+                INSERT INTO
+                    users (USER_NAME, CORRECT_ANSWERS, IDENT)
+                VALUES
+                    ( %(user_name)s, %(correct_answers)s, %(ident)s )
+
+            """, {
+                    'user_name': user_name,
+                    'correct_answers': "",
+                    'ident': unique_id,
+                }
+            )
+            return "Added `{0}` to the database with UUID {1}".format(user_name, unique_id)
 
 
 def delete_user(uuid: str) -> bool:
