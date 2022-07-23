@@ -270,8 +270,47 @@ def delete_user(uuid: str) -> bool:
     """
     with conn_singleton() as conn:
         with conn.cursor() as cur:
-            cur.execute("")
-            return True
+            cur.execute(
+                """
+                DELETE
+                FROM
+                    users
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'ident': uuid,
+                }
+            )
+            if cur.rowcount > 0:
+                return True
+            else:
+                return False
+
+
+@delete_user.register
+def _(user_name: str) -> bool:
+    """**Delete a user by USERNAME.**
+
+    :param user_name: Needs to be in string format for comparison
+    :return:
+    """
+    with conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE
+                FROM
+                    users
+                WHERE
+                    user_name = %(user_name)s
+            """, {
+                    'user_name': user_name,
+                }
+            )
+            if cur.rowcount > 0:
+                return True
+            else:
+                return False
 
 
 # initiate_database()
