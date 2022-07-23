@@ -1,8 +1,7 @@
-from functools import singledispatch
 from uuid import uuid1
 
 from config import config
-from db_classes import Combined
+from db_classes import Combined, User
 from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
 
@@ -451,16 +450,48 @@ def delete_user_by_name(user_name: str) -> tuple:
                 return False, cur.rowcount
 
 
-@singledispatch
-def get_user(uuid: str) -> None:
+def get_user_by_uuid(uuid: str) -> User:
     """Get user by UUID"""
-    pass
+    with conn_singleton() as conn:
+        cur = conn.cursor(row_factory=class_row(User))
+        results = cur.execute(
+            """
+            SELECT
+                id,
+                user_name,
+                correct_answers,
+                ident
+            FROM
+                users
+            WHERE
+                ident = %(ident)s
+        """, {
+                'ident': uuid,
+            }
+        ).fetchone()
+        return results
 
 
-@get_user.register
-def _(user_name: str) -> None:
+def get_user_by_name(user_name: str) -> User:
     """Get User by username"""
-    pass
+    with conn_singleton() as conn:
+        cur = conn.cursor(row_factory=class_row(User))
+        results = cur.execute(
+            """
+            SELECT
+                id,
+                user_name,
+                correct_answers,
+                ident
+            FROM
+                users
+            WHERE
+                user_name = %(user_name)s
+        """, {
+                'user_name': user_name,
+            }
+        ).fetchone()
+        return results
 
 
 # initiate_database()
@@ -473,9 +504,8 @@ def _(user_name: str) -> None:
 #         expl="expl{0}".format(i),
 #     ))
 
-# print(add_user("testing"))
-# if delete_user("testing"):
-#     print("yeet-ed")
+# print(add_user("testingaa"))
+# print(delete_user_by_name("testingaa"))
 
 # print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
 
