@@ -32,19 +32,21 @@ html = """
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Chat</title>
+        <title>WebSocket Quiz - Bug, Feature or Tupilaqs</title>
     </head>
     <body>
-        <h1>WebSocket Chat</h1>
-        <form action="" onsubmit="newQuestion(event)">
+        <h1>WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
+        <h2>Add new question</h1>
+        <form action="" onsubmit="addNewQuestion(event)">
             <label>Username: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
             <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
             <button onclick="connect(event)">Connect</button>
             <hr>
-            <label>Question: <input type="text" id="questionText" autocomplete="off"/></label>
+            <label>New Question: <input type="text" id="newQuestionText" autocomplete="off"/></label>
             <label>Correct answer: <input type="text" id="correctAnswer" autocomplete="off"/></label>
             <button>Send</button>
         </form>
+
         <ul id='messages'>
         </ul>
         <script>
@@ -52,23 +54,100 @@ html = """
             function connect(event) {
                 var itemId = document.getElementById("itemId")
                 var token = document.getElementById("token")
-                ws = new WebSocket("ws://localhost:8000/items/" + itemId.value + "/ws?token=" + token.value);
+                ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
                 ws.onmessage = function(event) {
-                    var messages = document.getElementById('messages')
-                    var message = document.createElement('li')
-                    var content = document.createTextNode(event.data)
-                    message.appendChild(content)
-                    messages.appendChild(message)
+                    console.log(event.data)
+                    const data_parsed = JSON.parse(event.data)
+                    switch (data_parsed.type) {
+                      default:
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('li')
+                        var content = document.createTextNode(data_parsed.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                  }
                 };
                 event.preventDefault()
             }
-            function newQuestion(event) {
-                var input = document.getElementById("questionText")
+            function addNewQuestion(event) {
+                var input = document.getElementById("newQuestionText")
                 var correct_answer = document.getElementById("correctAnswer")
                 const response = {
                   type: "new_question",
                   question: input.value,
                   correct_answer: correct_answer.value,
+                };
+                ws.send(JSON.stringify(response))
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
+"""
+
+# Copy-paste for the quiz page
+html_quiz_solve_page = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Quiz - Bug, Feature or Tupilaqs</title>
+    </head>
+    <body>
+        <h1>WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
+        <form action="" onsubmit="solveQuiz(event)">
+            <label>Username: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
+            <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
+            <button onclick="connect(event)">Connect</button>
+            <hr>
+            <div id='solveQuestionText'>
+            </div>
+            <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
+            <button>Send</button>
+        </form>
+
+        <ul id='messages'>
+        </ul>
+        <script>
+        var ws = null;
+        var solve_question_text = document.getElementById("solveQuestionText")
+        solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
+
+            function connect(event) {
+                var itemId = document.getElementById("itemId")
+                var token = document.getElementById("token")
+                ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
+
+                const request = {
+                  type: "serve_new_question",
+                };
+                ws.send(JSON.stringify(request))
+
+                ws.onmessage = function(event) {
+                    console.log(event.data)
+                    const data_parsed = JSON.parse(event.data)
+                    switch (data_parsed.type) {
+                      case "solve_question_text":
+                        solve_question_text.innerHTML = data_parsed.data
+                        break;
+                      default:
+                        var messages = document.getElementById('messages')
+                        var message = document.createElement('li')
+                        var content = document.createTextNode(data_parsed.data)
+                        message.appendChild(content)
+                        messages.appendChild(message)
+                  }
+                  event.preventDefault()
+                  }
+                };
+
+            function solveQuiz(event) {
+                var input = document.getElementById("userAnswer")
+                var question = document.getElementById("solveQuestionText")
+                const response = {
+                  type: "new_answer",
+                  question: question.value,
+                  user_answer: input.value,
                 };
                 ws.send(JSON.stringify(response))
                 input.value = ''
@@ -88,10 +167,24 @@ def process_new_question(user, event):
                                      event['correct_answer'])
 
 
+def process_serve_new_question(user, event):
+    """Takes in a json event (content ignored for now) and requests a new question from the database"""
+    return database.serve_new_question(user)
+
+
 @app.get("/")
-async def get():
+async def get_main_page():
     """Returns the main html body"""
     return HTMLResponse(html)
+
+
+@app.get("/solve_quiz")
+async def get_quiz_page():
+    """Returns the quiz html body,
+
+    where the user solves the questions presented
+    """
+    return HTMLResponse(html_quiz_solve_page)
 
 
 async def get_cookie_or_token(
@@ -105,8 +198,8 @@ async def get_cookie_or_token(
     return session or token
 
 
-@app.websocket("/items/{item_id}/ws")
-async def websocket_endpoint(
+@app.websocket("/solve_quiz/{item_id}/ws")
+async def websocket_endpoint_quiz(
     websocket: WebSocket,
     item_id: str,
     q: Union[int, None] = None,
@@ -117,13 +210,40 @@ async def websocket_endpoint(
     while True:
         data = await websocket.receive_text()
         logger.debug('received %s', data)
-        await websocket.send_text(
-            f"Session cookie or query token value is: {cookie_or_token}"
-        )
-        if q is not None:
-            await websocket.send_text(f"Query parameter q is: {q}")
-        await websocket.send_text(f"Message text was: {data}, for item ID: {item_id}")
 
+        # Parse what the frontend sent
+        event = json.loads(data)
+        if event['type'] == 'serve_new_question':
+            process_serve_new_question(user=item_id, event=event)
+        else:
+            logger.error('Unrecognized type "%s"', event['type'])
+
+
+@app.websocket("/new_question/{item_id}/ws")
+async def websocket_endpoint(
+    websocket: WebSocket,
+    item_id: str,
+    q: Union[int, None] = None,
+    cookie_or_token: str = Depends(get_cookie_or_token),
+):
+    """Responds to new_question events from the frontend, sending the recieved data into the database"""
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        logger.debug('received %s', data)
+
+        # For debug, echo back (TODO: Remove)
+        d = dict(type="cookie", data=f"Session cookie or query token value is: {cookie_or_token}")
+        await websocket.send_json(d)
+
+        if q is not None:
+            d = dict(type="query", data=f"Query parameter q is: {q}")
+            await websocket.send_json(d)
+
+        d = dict(type="message", data=f"Message text was: {data}, for item ID: {item_id}")
+        await websocket.send_json(d)
+
+        # Parse what the frontend sent
         event = json.loads(data)
         if event['type'] == 'new_question':
             process_new_question(user=item_id, event=event)
