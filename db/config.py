@@ -16,7 +16,7 @@ def config(filename='database.ini', section='local') -> dict:
     parser.read(filename)
 
     db = {}
-    section = "postgresql-"+section
+    section = "postgresql "+section
     if parser.has_section(section):
         params = parser.items(section)
         for param in params:
