@@ -27,7 +27,7 @@ def initiate_database() -> bool:
     all questions and answers have a unique ID and
     an identifier using UUID for join.
 
-    This should only be ran once to make necessary tables or if
+    This should only run once to make necessary tables or if
     you want to recreate it for any reason.
 
     :return: if everything was successful
