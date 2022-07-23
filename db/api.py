@@ -7,11 +7,7 @@ from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
 
 
-def conn_singleton() -> Connection:
-    """**Returns a connection for the database.**
-
-    :return: A Connection
-    """
+def __conn_singleton() -> Connection:
     conn = ""
     try:
         conn = connect(**config(section='local'))
@@ -32,7 +28,7 @@ def initiate_database() -> bool:
 
     :return: if everything was successful
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         print("Connecting to DB")
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS QUESTIONS")
@@ -66,7 +62,7 @@ def insert_question(
     :param votes:
     """
     unique_id = uuid1()
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -103,7 +99,7 @@ def delete_question(uuid: str) -> bool:
     :param uuid: Needs to be in string format for comparison
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -140,7 +136,7 @@ def update_question_text(uuid: str, text: str) -> bool:
     :param text:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -165,7 +161,7 @@ def update_question_title(uuid: str, title: str) -> bool:
     :param title:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -190,7 +186,7 @@ def update_question_explanation(uuid: str, expl: str) -> bool:
     :param expl:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -215,7 +211,7 @@ def update_question_difficulty(uuid: str, diff: int) -> bool:
     :param diff:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -240,7 +236,7 @@ def update_question_votes(uuid: str, votes: int) -> bool:
     :param votes:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -265,7 +261,7 @@ def update_answer_text(uuid: str, text: str) -> bool:
     :param text:
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -289,11 +285,11 @@ def get_question(uuid: str) -> Combined:
     :param uuid: Needs to be in string format for comparison
     :return: A list with the question corresponding to the uuid provided
     """
-    # with conn_singleton() as conn:
+    # with __conn_singleton() as conn:
     #     cur = conn.cursor(row_factory=class_row(Combined))
     #     v = cur.execute("SELECT * FROM answers JOIN questions ON answers.ident = questions.ident").fetchall()
     #     print(v)
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         cur = conn.cursor(row_factory=class_row(Combined))
         results = cur.execute(
             """
@@ -326,7 +322,7 @@ def get_all_questions() -> list[Combined]:
 
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         cur = conn.cursor(row_factory=class_row(Combined))
         results = cur.execute(
             """
@@ -357,7 +353,7 @@ def add_user(user_name: str) -> str:
     :return: A string - if it successfully added a row
     """
     unique_id = uuid1()
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -381,7 +377,7 @@ def delete_user_by_uuid(uuid: str) -> bool:
     :param uuid: Needs to be in string format for comparison
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -406,7 +402,7 @@ def delete_user_by_name(user_name: str) -> tuple:
     :param user_name: Needs to be in string format for comparison
     :return:
     """
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -427,7 +423,7 @@ def delete_user_by_name(user_name: str) -> tuple:
 
 def get_user_by_uuid(uuid: str) -> User:
     """Get user by UUID"""
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         cur = conn.cursor(row_factory=class_row(User))
         results = cur.execute(
             """
@@ -449,7 +445,7 @@ def get_user_by_uuid(uuid: str) -> User:
 
 def get_user_by_name(user_name: str) -> User:
     """Get User by username"""
-    with conn_singleton() as conn:
+    with __conn_singleton() as conn:
         cur = conn.cursor(row_factory=class_row(User))
         results = cur.execute(
             """
