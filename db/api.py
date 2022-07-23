@@ -1,3 +1,4 @@
+from functools import singledispatch
 from uuid import uuid1
 
 from config import config
@@ -262,6 +263,7 @@ def add_user(user_name: str) -> str:
             return "Added `{0}` to the database with UUID {1}".format(user_name, unique_id)
 
 
+@singledispatch
 def delete_user(uuid: str) -> bool:
     """**Delete a user by UUID.**
 
