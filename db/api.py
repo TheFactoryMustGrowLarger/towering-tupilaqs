@@ -401,8 +401,7 @@ def add_user(user_name: str) -> str:
             return "Added `{0}` to the database with UUID {1}".format(user_name, unique_id)
 
 
-@singledispatch
-def delete_user(uuid: str) -> bool:
+def delete_user_by_uuid(uuid: str) -> bool:
     """**Delete a user by UUID.**
 
     :param uuid: Needs to be in string format for comparison
@@ -427,8 +426,7 @@ def delete_user(uuid: str) -> bool:
                 return False
 
 
-@delete_user.register
-def _(user_name: str) -> bool:
+def delete_user_by_name(user_name: str) -> tuple:
     """**Delete a user by USERNAME.**
 
     :param user_name: Needs to be in string format for comparison
@@ -448,9 +446,9 @@ def _(user_name: str) -> bool:
                 }
             )
             if cur.rowcount > 0:
-                return True
+                return True, cur.rowcount
             else:
-                return False
+                return False, cur.rowcount
 
 
 @singledispatch
