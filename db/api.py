@@ -16,7 +16,7 @@ def __conn_singleton() -> Connection:
     return conn
 
 
-def initiate_database() -> bool:
+def initiate_database() -> None:
     """**Initiates database.**
 
     Initiates database with two tables for 'questions' and 'answers'
@@ -40,8 +40,6 @@ def initiate_database() -> bool:
             print("Added `answers` table to DB.")
             cur.execute(users)
             print("Added `users` table to DB.")
-
-    return True
 
 
 def insert_question(
@@ -90,10 +88,10 @@ def insert_question(
                     'ident': unique_id,
                 }
             )
-            return "Added `{0}` to the database with UUID {1}.".format(title, unique_id)
+            return f"Added `{title}` to the database with UUID {unique_id}."
 
 
-def delete_question(uuid: str) -> bool:
+def delete_question(uuid: str) -> tuple:
     """**Deletes a record from the DB.**
 
     :param uuid: Needs to be in string format for comparison
@@ -124,9 +122,9 @@ def delete_question(uuid: str) -> bool:
                 }
             )
             if cur.rowcount > 0:
-                return True
+                return True, cur.rowcount
             else:
-                return False
+                return False, cur.rowcount
 
 
 def update_question_text(uuid: str, text: str) -> bool:
@@ -368,10 +366,10 @@ def add_user(user_name: str) -> str:
                     'ident': unique_id,
                 }
             )
-            return "Added `{0}` to the database with UUID {1}".format(user_name, unique_id)
+            return f"Added `{user_name}` to the database with UUID {unique_id}"
 
 
-def delete_user_by_uuid(uuid: str) -> bool:
+def delete_user_by_uuid(uuid: str) -> tuple:
     """**Delete a user by UUID.**
 
     :param uuid: Needs to be in string format for comparison
@@ -391,9 +389,9 @@ def delete_user_by_uuid(uuid: str) -> bool:
                 }
             )
             if cur.rowcount > 0:
-                return True
+                return True, cur.rowcount
             else:
-                return False
+                return False, cur.rowcount
 
 
 def delete_user_by_name(user_name: str) -> tuple:
