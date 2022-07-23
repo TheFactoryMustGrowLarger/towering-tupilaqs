@@ -31,4 +31,5 @@ build/
 .DS_Store
 # Emacs
 *~
-!/poetry.lock
+
+poetry.lock
