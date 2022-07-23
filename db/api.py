@@ -80,7 +80,7 @@ def insert_question(
         expl: str,
         diff: int = 0,
         votes: int = 0
-) -> None:
+) -> str:
     """**Insert a record database.**
 
     :param question:
@@ -119,7 +119,7 @@ def insert_question(
                     'ident': unique_id,
                 }
             )
-            print("Added {0} to the database with UUID {1}.".format(title, unique_id))
+            return "Added `{0}` to the database with UUID {1}.".format(title, unique_id)
 
 
 def delete_question(uuid: str) -> bool:
