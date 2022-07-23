@@ -35,7 +35,7 @@ def record_user_answer(user, question, answer):
     'Feature',
     'Upvote'
 
-    FIXME: Return if correct or not
+    returns message text to the user to indicate correct or incorrect answer and a explanation of the question.
     """
     logger.info('record_user_answer(%s, %s, """%s""")' % (user, answer, question))
-    return False
+    return 'Correct, because x-y-z'

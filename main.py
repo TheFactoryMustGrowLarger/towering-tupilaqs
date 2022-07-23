@@ -102,6 +102,7 @@ html_quiz_solve_page = """
             <hr>
             <div id='solveQuestionText'></div>
             <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
+            <div id='answerFeedbackText'></div>
             <button>Send</button>
         </form>
         <ul id='messages'>
@@ -109,7 +110,8 @@ html_quiz_solve_page = """
         <script>
         console.log("Starting")
         var ws = null;
-        var solve_question_text = document.getElementById("solveQuestionText")
+        var solve_question_text  = document.getElementById("solveQuestionText")
+        var answer_feedback_text = document.getElementById("answerFeedbackText")
         solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
 
         function connect(event) {
@@ -131,6 +133,9 @@ html_quiz_solve_page = """
             switch (data_parsed.type) {
               case "solve_question_text":
                 solve_question_text.innerHTML = data_parsed.data
+                break;
+              case "answer_feedback_text":
+                answer_feedback_text.innerHTML = data_parsed.data
                 break;
               default:
                 var messages = document.getElementById('messages')
@@ -235,9 +240,11 @@ async def websocket_endpoint_quiz(
             new_question = process_serve_new_question(user=item_id, event=event)
             d = dict(type="solve_question_text", data=new_question)
             await websocket.send_json(d)
-        if event['type'] == 'new_answer':
-            # User has submitted a result, FIXME: send back if correct or not
-            process_new_answer(user=item_id, event=event)
+        elif event['type'] == 'new_answer':
+            # User has submitted a result, return if the result is correct or not
+            feedback = process_new_answer(user=item_id, event=event)
+            d = dict(type="answer_feedback_text", data=feedback)
+            await websocket.send_json(d)
         else:
             logger.error('Unrecognized type "%s"', event['type'])
 
