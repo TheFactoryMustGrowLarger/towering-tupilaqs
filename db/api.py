@@ -58,18 +58,18 @@ def initiate_database() -> bool:
             IDENT VARCHAR(100) NOT NULL
         )
     '''
-    with connect(**config()) as conn:
+    with conn_singleton() as conn:
         print("Connecting to DB")
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS QUESTIONS")
             cur.execute("DROP TABLE IF EXISTS ANSWERS")
             cur.execute("DROP TABLE IF EXISTS USERS")
             cur.execute(questions_table)
-            print("Added questions table to DB.")
+            print("Added `questions` table to DB.")
             cur.execute(answers_table)
-            print("Added answers table to DB.")
+            print("Added `answers` table to DB.")
             cur.execute(users_table)
-            print("Added users table to DB.")
+            print("Added `users` table to DB.")
 
     return True
 
@@ -159,15 +159,28 @@ def delete_question(uuid: str) -> bool:
                 return False
 
 
-def update_question(uuid: str) -> bool:
+def update_question(uuid: str, question: str = "", answer: str = "") -> bool:
     """**Update a record in the DB.**
 
     :param uuid: Needs to be in string format for comparison
+    :param question:
+    :param answer:
     :return:
     """
     with conn_singleton() as conn:
         with conn.cursor() as cur:
-            cur.execute("")
+            cur.execute(
+                """
+                UPDATE
+                    question
+                SET
+
+                WHERE
+                    ident = %(ident)s
+            """, {
+                    'ident': uuid,
+                }
+            )
             return True
 
 
