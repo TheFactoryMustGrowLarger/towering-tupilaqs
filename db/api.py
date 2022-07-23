@@ -1,7 +1,7 @@
 from uuid import uuid1
 
-import psycopg
 from config import config
+from psycopg import connect, errors
 
 
 def initiate_database() -> None:
@@ -38,7 +38,7 @@ def initiate_database() -> None:
             CORRECT_ANSWERS VARCHAR(500)
         )
     '''
-    with psycopg.connect(**config()) as conn:
+    with connect(**config()) as conn:
         print("Connecting to DB")
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS QUESTIONS")
@@ -73,7 +73,7 @@ def insert_question(
     unique_id = uuid1()
 
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
@@ -104,7 +104,7 @@ def insert_question(
                 )
                 conn.commit()
                 print("Added {0} to the database with UUID {1}.".format(title, unique_id))
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
 
@@ -116,7 +116,7 @@ def delete_question(uuid: str) -> bool:
     :return:
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 cur.execute(
                     """
@@ -145,7 +145,7 @@ def delete_question(uuid: str) -> bool:
                     return True
                 else:
                     return False
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
         return False
@@ -158,12 +158,12 @@ def update_question(uuid: str) -> bool:
     :return:
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 cur.execute("")
                 conn.commit()
                 return True
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
         return False
@@ -176,7 +176,7 @@ def get_question(uuid: str) -> list:
     :return: A list with the question corresponding to the uuid provided
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 v = cur.execute(
                     """
@@ -200,7 +200,7 @@ def get_question(uuid: str) -> list:
                     }
                 ).fetchone()
                 return v
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
 
@@ -211,7 +211,7 @@ def get_all_questions() -> list:
     :return:
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 v = cur.execute(
                     """
@@ -231,7 +231,7 @@ def get_all_questions() -> list:
                 """
                 ).fetchall()
                 return v
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
 
@@ -242,11 +242,11 @@ def add_user() -> None:
     :return:
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 cur.execute("")
                 conn.commit()
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
 
@@ -258,12 +258,12 @@ def delete_user(uuid: str) -> bool:
     :return:
     """
     try:
-        with psycopg.connect(**config()) as conn:
+        with connect(**config()) as conn:
             with conn.cursor() as cur:
                 cur.execute("")
                 conn.commit()
                 return True
-    except psycopg.DataError as e:
+    except errors.DataError as e:
         # Better error handling needed
         print(e)
         return False
