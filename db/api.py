@@ -2,6 +2,7 @@ from uuid import uuid1
 
 from config import config
 from db_classes import Combined, User
+from db_tables import answers, questions, users
 from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
 
@@ -31,43 +32,17 @@ def initiate_database() -> bool:
 
     :return: if everything was successful
     """
-    questions_table = '''
-        CREATE TABLE QUESTIONS(
-            ID SERIAL PRIMARY KEY,
-            TXT TEXT NOT NULL,
-            TITLE CHAR(25) NOT NULL,
-            EXPL CHAR(30) NOT NULL,
-            DIFFICULTY SMALLINT NOT NULL,
-            IDENT VARCHAR(100) NOT NULL,
-            VOTES SMALLINT
-        )
-    '''
-    answers_table = '''
-        CREATE TABLE ANSWERS(
-            ID SERIAL PRIMARY KEY,
-            ANSWER TEXT NOT NULL,
-            IDENT VARCHAR(100) NOT NULL
-        )
-    '''
-    users_table = '''
-        CREATE TABLE USERS(
-            ID SERIAL PRIMARY KEY,
-            USER_NAME VARCHAR(30) NOT NULL,
-            CORRECT_ANSWERS TEXT,
-            IDENT VARCHAR(100) NOT NULL
-        )
-    '''
     with conn_singleton() as conn:
         print("Connecting to DB")
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS QUESTIONS")
             cur.execute("DROP TABLE IF EXISTS ANSWERS")
             cur.execute("DROP TABLE IF EXISTS USERS")
-            cur.execute(questions_table)
+            cur.execute(questions)
             print("Added `questions` table to DB.")
-            cur.execute(answers_table)
+            cur.execute(answers)
             print("Added `answers` table to DB.")
-            cur.execute(users_table)
+            cur.execute(users)
             print("Added `users` table to DB.")
 
     return True
@@ -495,14 +470,15 @@ def get_user_by_name(user_name: str) -> User:
 
 
 # initiate_database()
-
+#
 # for i in range(1, 10):
 #     print(insert_question(
-#         question="question{0}".format(i),
-#         answer="answer{0}".format(i),
-#         title="title{0}".format(i),
-#         expl="expl{0}".format(i),
+#         question=f"question{i}",
+#         answer=f"answer{i}",
+#         title=f"title{i}",
+#         expl=f"expl{i}"
 #     ))
+#     print(add_user(user_name=f"username{i}"))
 
 # print(add_user("testingaa"))
 # print(delete_user_by_name("testingaa"))
