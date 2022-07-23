@@ -19,7 +19,7 @@ def conn_singleton() -> Connection:
     return conn
 
 
-def initiate_database() -> None:
+def initiate_database() -> bool:
     """**Initiates database.**
 
     Initiates database with two tables for 'questions' and 'answers'
@@ -28,6 +28,8 @@ def initiate_database() -> None:
 
     This should only be ran once to make necessary tables or if
     you want to recreate it for any reason.
+
+    :return: if everything was successful
     """
     questions_table = '''
         CREATE TABLE QUESTIONS(
@@ -67,7 +69,8 @@ def initiate_database() -> None:
             print("Added answers table to DB.")
             cur.execute(users_table)
             print("Added users table to DB.")
-            conn.commit()
+
+    return True
 
 
 def insert_question(
