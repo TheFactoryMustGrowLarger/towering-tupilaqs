@@ -453,6 +453,18 @@ def _(user_name: str) -> bool:
                 return False
 
 
+@singledispatch
+def get_user(uuid: str) -> None:
+    """Get user by UUID"""
+    pass
+
+
+@get_user.register
+def _(user_name: str) -> None:
+    """Get User by username"""
+    pass
+
+
 # initiate_database()
 
 # for i in range(1, 10):
