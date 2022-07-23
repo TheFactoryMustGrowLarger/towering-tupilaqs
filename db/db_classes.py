@@ -39,3 +39,13 @@ class Combined:
     difficulty: int
     ident: str
     votes: int
+
+
+@dataclass
+class User:
+    """User Type struct"""
+
+    id: int
+    user_name: str
+    correct_answers: str
+    ident: str
