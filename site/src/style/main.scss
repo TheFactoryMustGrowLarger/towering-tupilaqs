@@ -21,6 +21,9 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
+    .debug-color{
+      color: red;
+    }
     .main-title{
       font-style: italic;
       font-weight: bold;
