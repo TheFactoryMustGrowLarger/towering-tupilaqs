@@ -33,7 +33,13 @@ Linux only, follow: [https://www.digitalocean.com/community/tutorials/how-to-ins
 $sudo -u quiz psql
 quiz=# \password
 ```
-
+Windows only, follow: [https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql/](https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql/) when you have a PSQL shell open and logged into the postgres SUPERUSER, do the following:
+```
+postgres=# CREATE USER quiz WITH PASSWORD 'quiz';
+CREATE ROLE
+postgres=# CREATE DATABASE quiz WITH ENCODING 'UTF8' LC_COLLATE='English_United States' LC_CTYPE='English_United States';
+CREATE DATABASE
+```
 ## Remote database
 To use the remote database, change the `db/api.py` line:
 ```
