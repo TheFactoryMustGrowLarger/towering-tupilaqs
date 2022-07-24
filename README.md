@@ -1,3 +1,4 @@
+# Tower Tupilaqs
 ![Tupilaqs in Paris](images/tower-tupilaqs-paris.jpg)
 
 Image credit: Adapted from
@@ -5,8 +6,11 @@ Image credit: Adapted from
 - Ansgar Walk, CC BY-SA 3.0 <https://creativecommons.org/licenses/by-sa/3.0>, via Wikimedia Commons
 - Wladyslaw (Taxiarchos228), CC BY 3.0 <https://creativecommons.org/licenses/by/3.0>, via Wikimedia Commons
 
+## Introduction
+Quiz game to determine if a piece of code is a bug or a feature for Python Discord Code Jam 2022
+
 # Requirements
-[poetry](https://python-poetry.org/) Follow the install guide for your system:
+[poetry](https://python-poetry.org/) is used for dependency management. Follow the install guide for your system:
 [https://python-poetry.org/docs/master/#installing-with-the-official-installer](https://python-poetry.org/docs/master/#installing-with-the-official-installe)
 
 ## Add poetry to Windows Path
@@ -30,7 +34,9 @@ poetry run uvicorn main:app --reload
 ```
 also available as `make serve` if you have make.
 
-This should serve two webpages:
+This should serve two preliminary webpages:
 
 - http://127.0.0.1:8000
 - http://127.0.0.1:8000/solve_quiz?
+
+Python code will log to `tupilaqs.log`.
