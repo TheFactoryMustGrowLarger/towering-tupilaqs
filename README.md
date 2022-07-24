@@ -27,6 +27,20 @@ also available as `make install` if you have make.
 
 If problems with the requirements not solving, delete the `poetry.lock` file and try again (the `pyproject.toml` will be used instead and a new `poetry.lock` will be created).
 
+## Local database
+Linux only, follow: [https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart](https://www.digitalocean.com/community/tutorials/how-to-install-postgresql-on-ubuntu-20-04-quickstart) with username, password and db name "quiz". To configure password, use the `\password` command:
+```
+$sudo -u quiz psql
+quiz=# \password
+```
+
+## Remote database
+To use the remote database, change the `db/api.py` line:
+```
+conn = connect(**config(section='local'))
+```
+to `'remote'`. FIXME: better way to switch.
+
 ## Run
 To serve the initial webpage, use
 ```
