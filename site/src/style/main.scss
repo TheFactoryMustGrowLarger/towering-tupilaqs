@@ -21,6 +21,24 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100vh;
-
+    .main-title{
+      font-style: italic;
+      font-weight: bold;
+      color: white;
+      margin-top: 10px;
+      letter-spacing: 2px;
+    }
+    .start-button{
+      font-style: italic;
+      font-weight: bold;
+    }
+    .desc{
+      text-align: center;
+      color: #8c03fc;
+    }
+    .flex{
+      display: flex;
+      margin-top: 10px;
+    }
   }
 }
