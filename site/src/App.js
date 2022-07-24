@@ -31,10 +31,10 @@ const Box = () =>{
                           #init creates certain parameters that allow you to define information quickly.
                           def __init__(self, name):
                             self.name = name
-                            
+
                           def get_name(self):
                         \treturn self.name
-                            
+
                         if __name__ == "__main__":
                           d = Dog(str(input("name your dog: "))
                           print(d.get_name())
