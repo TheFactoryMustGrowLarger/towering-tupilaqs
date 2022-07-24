@@ -1,7 +1,7 @@
 from configparser import ConfigParser
 
 
-def config(filename='database.ini', section='postgresql') -> dict:
+def config(filename='database.ini', section='local') -> dict:
     """**Makes a dict out of string.**
 
     Taking info from database.ini to use for the database connection
@@ -16,6 +16,7 @@ def config(filename='database.ini', section='postgresql') -> dict:
     parser.read(filename)
 
     db = {}
+    section = "postgresql "+section
     if parser.has_section(section):
         params = parser.items(section)
         for param in params:

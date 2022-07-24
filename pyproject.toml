@@ -2,7 +2,10 @@
 name = "Towering tupilaqs"
 version = "0.1.0"
 description = "Quiz game to determine if a piece of code is a bug or a feature for Python Discord Code Jam 2022"
-authors = ["Author 1 <email@mail.com>"]
+authors = ["Devansh Singh <https://github.com/Devansh3712>",
+	"Hadházy Tamás <https://github.com/Hels15>",
+	"Tobias Fredriksson <https://github.com/Nyxion>",
+	"TheFactoryMustGrowLarger <https://github.com/TheFactoryMustGrowLarger>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
