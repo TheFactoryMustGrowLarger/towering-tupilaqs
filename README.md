@@ -1,3 +1,20 @@
+# TODO
+
+- Nicer frontend (Assigned to Hels15)
+- Add some default questions to the database
+- should probably have an easy command line switch between local and remote database
+- should probably not clear the database every time the program runs
+- basic password check to avoid two people using the same username
+- Support difficulty
+- Support voting up good questions
+- User database needs to keep track of:
+- - Entered questions uuid, to be able to calculate a score for submiting good questions
+- - correctly answered question uuids, to be able to calculate a score
+- - incorrectly answered question uuids, to be able to calculate a score
+- When returning a question (Assigned to Sintani):
+- - Sort by vote, returning highly voted questions first
+- - Ensure the user has not already answered
+
 # Tower Tupilaqs
 ![Tupilaqs in Paris](images/tower-tupilaqs-paris.jpg)
 

@@ -1,31 +1,23 @@
 import json
-import logging
+import random
 from typing import Union
 
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status
 from fastapi.responses import HTMLResponse
 
-import database
-
-
-def setup_logger():
-    """Returns logging object that streams to file"""
-    logger = logging.getLogger('tupilaqs')
-    logger.setLevel(logging.DEBUG)
-
-    ch = logging.FileHandler('tupilaqs.log')
-    ch.setLevel(logging.DEBUG)
-    # create formatter
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    # add formatter to ch
-    ch.setFormatter(formatter)
-    # add ch to logger
-    logger.addHandler(ch)
-    return logger
-
+import db.api
+from utilites.logger_utility import setup_logger
 
 logger = setup_logger()
 app = FastAPI()
+# FIXME: Should only be done once, clears the database
+db.api.initiate_database()
+db.api.insert_question(
+    question='This is a question, pretend it is nicely formatted',
+    answer='Bug',
+    title='Question title, hint: the answer is Bug',
+    expl='This is just a placeholder')
+
 
 # FIXME: Should be changed to serve the frontend index.html
 html = """
@@ -44,6 +36,9 @@ html = """
             <hr>
             <label>New Question: <input type="text" id="newQuestionText" autocomplete="off"/></label>
             <label>Correct answer: <input type="text" id="correctAnswer" autocomplete="off"/></label>
+            <label>Question title: <input type="text" id="newQuestionTitle" autocomplete="off"/></label>
+            <label>Question explanation (shown after user has answered): <input type="text"
+                   id="newQuestionExplanation" autocomplete="off"/></label>
             <button>Send</button>
         </form>
 
@@ -70,15 +65,19 @@ html = """
                 event.preventDefault()
             }
             function addNewQuestion(event) {
-                var input = document.getElementById("newQuestionText")
+                var new_question_text = document.getElementById("newQuestionText")
                 var correct_answer = document.getElementById("correctAnswer")
+                var new_question_title = document.getElementById("newQuestionTitle")
+                var new_question_explanation = document.getElementById("newQuestionExplanation")
                 const response = {
                   type: "new_question",
-                  question: input.value,
+                  question: new_question_text.value,
                   correct_answer: correct_answer.value,
+                  new_question_title: new_question_title.value,
+                  new_question_explanation: new_question_explanation.value
                 };
                 ws.send(JSON.stringify(response))
-                input.value = ''
+                new_question_text.value = ''
                 event.preventDefault()
             }
         </script>
@@ -100,7 +99,10 @@ html_quiz_solve_page = """
             <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
             <button onclick="connect(event)">Connect</button>
             <hr>
+            <div id='solveQuestionTitle'></div>
             <div id='solveQuestionText'></div>
+
+            <div style="display:none;" id='solveQuestionUUID'></div>
             <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
             <div id='answerFeedbackText'></div>
             <button>Send</button>
@@ -111,7 +113,9 @@ html_quiz_solve_page = """
         console.log("Starting")
         var ws = null;
         var solve_question_text  = document.getElementById("solveQuestionText")
+        var solve_question_title = document.getElementById("solveQuestionTitle")
         var answer_feedback_text = document.getElementById("answerFeedbackText")
+        var solve_question_uuid = document.getElementById("solveQuestionUUID")
         solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
 
         function connect(event) {
@@ -130,9 +134,12 @@ html_quiz_solve_page = """
             event.preventDefault()
             console.log(event.data)
             const data_parsed = JSON.parse(event.data)
+
             switch (data_parsed.type) {
               case "solve_question_text":
-                solve_question_text.innerHTML = data_parsed.data
+                solve_question_title.innerHTML = data_parsed.title
+                solve_question_text.innerHTML = data_parsed.txt
+                solve_question_uuid.innerHTML = data_parsed.uuid
                 break;
               case "answer_feedback_text":
                 answer_feedback_text.innerHTML = data_parsed.data
@@ -150,10 +157,9 @@ html_quiz_solve_page = """
         function solveQuiz(event) {
             event.preventDefault()
             var input = document.getElementById("userAnswer")
-            var question = document.getElementById("solveQuestionText")
             const response = {
               type: "new_answer",
-              question: question.innerHTML,
+              question_uuid: solve_question_uuid.innerHTML,
               user_answer: input.value,
             };
             ws.send(JSON.stringify(response))
@@ -167,26 +173,82 @@ html_quiz_solve_page = """
 """
 
 
+def get_or_create_user(user):
+    """Returns user uuid, if the user does not exist, it will be created"""
+    u = db.api.get_user_by_name(user)
+    if u is not None:
+        user_uuid = u.ident
+    else:
+        db.api.add_user(user)  # FIXME: password?
+        user_uuid = db.api.get_user_by_name(user)
+
+    return user_uuid
+
+
 def process_new_question(user, event):
-    """Takes in a json event and extracts fields to go into database"""
-    # FIXME: where do we Sanitize the input? (frontend/here/database?)
-    return database.add_new_question(user,
-                                     event['question'],
-                                     event['correct_answer'])
+    """Takes in a json event and extracts fields to go into database
+
+    Note: assumes frontend takes care of input sanitization
+    """
+    user_uuid = get_or_create_user(user)
+
+    # FIXME: add difficulty to event
+    difficulty = 0
+
+    database_insert = dict(question=event['question'],
+                           answer=event['correct_answer'],
+                           title=event['new_question_title'],
+                           expl=event['new_question_explanation'],
+                           diff=difficulty)
+
+    logger.info('Inserting %s by user uuid %s', database_insert, user_uuid)
+
+    # FIXME: add question to user_uuid to give user a score for submitting good questions
+    db.api.insert_question(**database_insert)
 
 
 def process_serve_new_question(user, event):
     """Takes in a json event (content ignored for now) and requests a new question from the database"""
-    question, correct_answer = database.serve_new_question(user)
-    # FIXME: keep track of answer?
-    return question
+    # FIXME: avoid showing the same question twice
+    result = db.api.get_all_questions()  # FIXME: avoid fetching for all questions
+
+    ret = dict(txt='This is a question, pretend it is nicely formatted',
+               title='Question Title',
+               uuid='Default')
+    # FIXME: Add difficulty
+    if len(result) > 0:
+        combined = random.choice(result)
+        ret = dict(txt=combined.txt,
+                   title=combined.title,
+                   uuid=combined.ident)
+
+    logger.info('serve_new_question -> %s', ret)
+    return ret
 
 
 def process_new_answer(user, event):
     """Takes in a json event with a user answer and sends to database"""
-    return database.record_user_answer(user,
-                                       question=event['question'],
-                                       answer=event['user_answer'])
+    # user_uuid = get_or_create_user(user)
+    question_uuid = event['question_uuid']
+
+    question = db.api.get_question(question_uuid)
+    if question is None:
+        raise Exception('Bug, could not find question corresponding to %s' % question_uuid)
+
+    user_answer = event['user_answer']
+    correct_answer = question.answer
+
+    if user_answer.lower() == correct_answer.lower():
+        ret = 'Correct!'
+    else:
+        ret = 'Sorry, this was a "%s".' % correct_answer
+
+    ret += '\n%s' % question.expl
+
+    # FIXME: update user, with both correct and incorrect answers
+
+    logger.info('process_new_answer(%s, %s, """%s""") -> %s' % (user, user_answer, question.txt, ret))
+    return ret
 
 
 @app.get("/")
@@ -238,7 +300,9 @@ async def websocket_endpoint_quiz(
         if event['type'] == 'serve_new_question':
             # Fetch a new question from database and send back to frontend
             new_question = process_serve_new_question(user=item_id, event=event)
-            d = dict(type="solve_question_text", data=new_question)
+            d = dict(type="solve_question_text")
+            d.update(new_question)
+
             await websocket.send_json(d)
         elif event['type'] == 'new_answer':
             # User has submitted a result, return if the result is correct or not

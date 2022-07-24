@@ -1,10 +1,14 @@
+# standard library imports
 from uuid import uuid1
 
-from config import config
-from db_classes import Combined, User
-from db_tables import answers, questions, users
+# third party imports
 from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
+
+# This project
+from db.utils.config import config
+from db.utils.db_classes import Combined, User
+from db.utils.db_tables import answers, questions, users
 
 
 def __conn_singleton() -> Connection:
@@ -59,6 +63,8 @@ def insert_question(
     :param diff:
     :param votes:
     """
+    # FIXME: Can this updated to check for duplicate question text?
+    # Not sure if it should be rejected or allowed to update.
     unique_id = uuid1()
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
@@ -348,7 +354,7 @@ def add_user(user_name: str) -> str:
     """**Add a new user to the database.**
 
     :param user_name: it's a username
-    :return: A string - if it successfully added a row
+    :return: unique_uuid of the added user
     """
     unique_id = uuid1()
     with __conn_singleton() as conn:
@@ -366,7 +372,7 @@ def add_user(user_name: str) -> str:
                     'ident': unique_id,
                 }
             )
-            return f"Added `{user_name}` to the database with UUID {unique_id}"
+            return unique_id
 
 
 def delete_user_by_uuid(uuid: str) -> tuple:
