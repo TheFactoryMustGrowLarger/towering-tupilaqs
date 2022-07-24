@@ -77,7 +77,6 @@ function App() {
                   <Route path="/" element={<LandingPage/>}/>
                   <Route path="/categories" element={<Categories/>}/>
               </Routes>
-
     </div>
       </BrowserRouter>
 
