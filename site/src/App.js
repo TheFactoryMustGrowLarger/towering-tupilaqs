@@ -4,12 +4,10 @@ import { CodeBlock, dracula } from "react-code-blocks";
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
 import {useState, useCallback, useEffect} from "react";
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import CodeMirror from '@uiw/react-codemirror';
-import { python } from "@codemirror/lang-python";
 
 export const WebSocketDemo = () => {
     //Public API that will echo messages sent to it back to the client
-    const [socketUrl, setSocketUrl] = useState('wss://echo.websocket.org');
+
     const [messageHistory, setMessageHistory] = useState([]);
 
     const {sendMessage, lastMessage, readyState} = useWebSocket(socketUrl);
@@ -68,26 +66,35 @@ const Categories = () => {
 }
 
 const LandingPage = () =>{
+    const [socketUrl, setSocketUrl] = useState('http://127.0.0.1:8000/');
+    const connect_event = (event) =>{
+        const itemId = document.getElementById("itemID")
+        const token = document.getElementById("token")
+        setSocketUrl("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value)
+           useWebSoket(sokcetURL => {
+                onMessage((mess) => {
+                console.log(mess.data)
+                const data_parsed = "idk"
+                    })
+           })
+    }
     return (
         <div>
             <div className="inputs registration">
-                <input type="text" className="input-base" placeholder="Username: "/>
-                <input type="text" className="input-base" placeholder="Password"/>
-                <button className="bb-buton small-height">Connect</button>
+                <input type="text" className="input-base" id="itemID" placeholder="Username: "/>
+                <input type="text" className="input-base" id="token" placeholder="Password"/>
+                <button className="bb-buton small-height" onClick={(event) => connect_event(event)}>Connect</button>
             </div>
             <Link to="/categories"><button className="bb-buton start-button">Start game</button></Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
-                <input type="text" className="input-base" placeholder="Correct answer:"/>
-                <input type="text" className="input-base" placeholder="Question title:"/>
-                <input type="text" className="input-base" placeholder="Question explanation:"/>
+                <input type="text" className="input-base" id="newQuestionText" placeholder="New Question: "/>
+                <input type="text" className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
+                <input type="text" className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
+                <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
+                <button className="bb-buton small-height">Send</button>
             </div>
-          <CodeMirror
-              value="console.log('hello world!');"
-              height="200px"
-              extensions={[python()]}
 
-    />
         </div>
 
 
