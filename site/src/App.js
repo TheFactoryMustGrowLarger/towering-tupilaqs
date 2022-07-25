@@ -1,29 +1,31 @@
-import React from "react";
 import "./style/main.scss";
 import { CodeBlock, dracula } from "react-code-blocks";
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
-import {useState, useCallback, useEffect} from "react";
+
+import React, { useState, useCallback, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 
 export const WebSocketDemo = () => {
-    //Public API that will echo messages sent to it back to the client
+  //Public API that will echo messages sent to it back to the client
+  const [socketUrl, setSocketUrl] = useState('ws://localhost:8000/ws');
+  const [messageHistory, setMessageHistory] = useState([]);
 
-    const [messageHistory, setMessageHistory] = useState([]);
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
-    const {sendMessage, lastMessage, readyState} = useWebSocket(socketUrl);
+  useEffect(() => {
+    if (lastMessage !== null) {
+      setMessageHistory((prev) => prev.concat(lastMessage));
+    }
+  }, [lastMessage, setMessageHistory]);
 
-    useEffect(() => {
-        if (lastMessage !== null) {
-            setMessageHistory((prev) => prev.concat(lastMessage));
-        }
-    }, [lastMessage, setMessageHistory]);
+  const handleClickChangeSocketUrl = useCallback(
+    () => setSocketUrl('ws://localhost:8000/solve_quiz'),
+    []
+  );
 
-    const handleClickChangeSocketUrl = useCallback(
-        () => setSocketUrl('wss://demos.kaazing.com/echo'),
-        []
-    );
-    const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
-     const connectionStatus = {
+  const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
+
+  const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
     [ReadyState.OPEN]: 'Open',
     [ReadyState.CLOSING]: 'Closing',
@@ -42,7 +44,7 @@ export const WebSocketDemo = () => {
       >
         Click Me to send 'Hello'
       </button>
-      <span className="debug-color">The WebSocket is currently {connectionStatus}</span>
+      <span>The WebSocket is currently {connectionStatus}</span>
       {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
       <ul>
         {messageHistory.map((message, idx) => (
@@ -52,7 +54,6 @@ export const WebSocketDemo = () => {
     </div>
   );
 };
-
 
 
 const Categories = () => {
@@ -66,18 +67,51 @@ const Categories = () => {
 }
 
 const LandingPage = () =>{
-    const [socketUrl, setSocketUrl] = useState('http://127.0.0.1:8000/');
+    var ws = null;
     const connect_event = (event) =>{
-        const itemId = document.getElementById("itemID")
-        const token = document.getElementById("token")
-        setSocketUrl("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value)
-           useWebSoket(sokcetURL => {
-                onMessage((mess) => {
-                console.log(mess.data)
-                const data_parsed = "idk"
-                    })
-           })
+        var itemId = document.getElementById("itemID")
+        var token = document.getElementById("token")
+        ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+	
+        ws.onmessage = function(event) {
+            console.log(event.data)
+            const data_parsed = JSON.parse(event.data)
+            switch (data_parsed.type) {
+            default:
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(data_parsed.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            }
+        };
+        event.preventDefault()
     }
+    const add_new_question = (event) =>{
+	// FIXME: Avoid copy paste and creating a new connection each time
+        var itemId = document.getElementById("itemID")
+        var token = document.getElementById("token")
+        ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+	
+        var new_question_text = document.getElementById("newQuestionText")
+        var correct_answer = document.getElementById("correctAnswer")
+        var new_question_title = document.getElementById("newQuestionTitle")
+        var new_question_explanation = document.getElementById("newQuestionExplanation")
+	ws.onopen = function(event) {
+            const request = {
+		type: "new_question",
+		question: new_question_text.value,
+		correct_answer: correct_answer.value,
+		new_question_title: new_question_title.value,
+		new_question_explanation: new_question_explanation.value
+	    };
+            ws.send(JSON.stringify(request))
+          };
+
+        new_question_text.value = ''
+        event.preventDefault()
+    }
+
     return (
         <div>
             <div className="inputs registration">
@@ -92,12 +126,9 @@ const LandingPage = () =>{
                 <input type="text" className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
                 <input type="text" className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
                 <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
-                <button className="bb-buton small-height">Send</button>
+                <button className="bb-buton small-height" onClick={(event) => add_new_question(event)}>Send</button>
             </div>
-
         </div>
-
-
     )
 }
 

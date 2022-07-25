@@ -191,6 +191,25 @@ toml = "*"
 virtualenv = ">=20.0.8"
 
 [[package]]
+name = "psycopg"
+version = "3.0.15"
+description = "PostgreSQL database adapter for Python"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+tzdata = {version = "*", markers = "sys_platform == \"win32\""}
+
+[package.extras]
+binary = ["psycopg-binary (==3.0.15)"]
+c = ["psycopg-c (==3.0.15)"]
+dev = ["black (>=22.3.0)", "dnspython (>=2.1)", "flake8 (>=4.0)", "mypy (>=0.920,!=0.930,!=0.931)", "types-setuptools (>=57.4)", "wheel (>=0.37)"]
+docs = ["Sphinx (>=4.2)", "furo (==2021.11.23)", "sphinx-autobuild (>=2021.3.14)", "sphinx-autodoc-typehints (>=1.12)", "dnspython (>=2.1)", "shapely (>=1.7)"]
+pool = ["psycopg-pool"]
+test = ["mypy (>=0.920,!=0.930,!=0.931)", "pproxy (>=2.7)", "pytest (>=6.2.5)", "pytest-asyncio (>=0.16,<0.17)", "pytest-cov (>=3.0)", "pytest-randomly (>=3.10)"]
+
+[[package]]
 name = "psycopg2-binary"
 version = "2.9.3"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
@@ -306,6 +325,14 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "tzdata"
+version = "2022.1"
+description = "Provider of IANA time zone data"
+category = "main"
+optional = false
+python-versions = ">=2"
+
+[[package]]
 name = "uvicorn"
 version = "0.18.2"
 description = "The lightning-fast ASGI server."
@@ -349,7 +376,7 @@ python-versions = ">=3.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "3.10.*"
-content-hash = "9c10d3ba9ae7d3d6d7e3cf96352a6e827271b09fd3776a973ebbfa9c5ecdcc6d"
+content-hash = "4ec17140d47524bb30f368962774e250022a10ee2e00c583fbe412a3f4a49448"
 
 [metadata.files]
 anyio = [
@@ -419,6 +446,10 @@ platformdirs = [
 pre-commit = [
     {file = "pre_commit-2.17.0-py2.py3-none-any.whl", hash = "sha256:725fa7459782d7bec5ead072810e47351de01709be838c2ce1726b9591dad616"},
     {file = "pre_commit-2.17.0.tar.gz", hash = "sha256:c1a8040ff15ad3d648c70cc3e55b93e4d2d5b687320955505587fd79bbaed06a"},
+]
+psycopg = [
+    {file = "psycopg-3.0.15-py3-none-any.whl", hash = "sha256:9e9beaf38ace6bdf5a5ad969130339d69d61e6ad41114d166779e591bfe40076"},
+    {file = "psycopg-3.0.15.tar.gz", hash = "sha256:1c5637f47e9a4d9b742a0b101f39189bebae0f625bfdfb0cf8a54dd5fe677610"},
 ]
 psycopg2-binary = [
     {file = "psycopg2-binary-2.9.3.tar.gz", hash = "sha256:761df5313dc15da1502b21453642d7599d26be88bff659382f8f9747c7ebea4e"},
@@ -585,6 +616,10 @@ toml = [
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
+]
+tzdata = [
+    {file = "tzdata-2022.1-py2.py3-none-any.whl", hash = "sha256:238e70234214138ed7b4e8a0fab0e5e13872edab3be586ab8198c407620e2ab9"},
+    {file = "tzdata-2022.1.tar.gz", hash = "sha256:8b536a8ec63dc0751342b3984193a3118f8fca2afe25752bb9b7fffd398552d3"},
 ]
 uvicorn = [
     {file = "uvicorn-0.18.2-py3-none-any.whl", hash = "sha256:c19a057deb1c5bb060946e2e5c262fc01590c6529c0af2c3d9ce941e89bc30e0"},

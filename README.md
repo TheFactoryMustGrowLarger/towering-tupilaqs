@@ -64,6 +64,32 @@ conn = connect(**config(section='local'))
 ```
 to `'remote'`. FIXME: better way to switch.
 
+## Node install
+### Node Linux setup
+```
+$snap install node --classic
+$node --version
+v16.16.0
+$sudo "curl -qL https://www.npmjs.com/install.sh > install.sh"
+$npm --version
+8.15.0
+```
+
+### Node Windows setup
+FIXME: Insert
+
+### Node common setup
+For both Windows and Linux, install project dependencies with
+```
+cd site
+npm install
+```
+and serve the webpage with
+```
+cd site
+npm start
+```
+
 ## Run
 To serve the initial webpage, use
 ```

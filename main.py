@@ -46,6 +46,7 @@ html = """
         </ul>
         <script>
         var ws = null;
+
             function connect(event) {
                 var itemId = document.getElementById("itemId")
                 var token = document.getElementById("token")
@@ -112,6 +113,14 @@ html_quiz_solve_page = """
         <script>
         console.log("Starting")
         var ws = null;
+        ws = new WebSocket("ws://localhost:8000/ws")
+        ws.onopen = function(event) {
+            const request = {
+              type: "serve_new_question",
+            };
+            ws.send(JSON.stringify(request))
+          };
+
         var solve_question_text  = document.getElementById("solveQuestionText")
         var solve_question_title = document.getElementById("solveQuestionTitle")
         var answer_feedback_text = document.getElementById("answerFeedbackText")
@@ -275,6 +284,15 @@ async def get_cookie_or_token(
     if session is None and token is None:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
     return session or token
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        logger.debug('echo: %s', data)
+        await websocket.send_text(f"Message text was: {data}")
 
 
 @app.websocket("/solve_quiz/{item_id}/ws")
