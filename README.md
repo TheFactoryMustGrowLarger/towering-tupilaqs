@@ -77,3 +77,21 @@ This should serve two preliminary webpages:
 - http://127.0.0.1:8000/solve_quiz?
 
 Python code will log to `tupilaqs.log`.
+
+
+## Difficulty Levels
+### Very Easy
+- Basic concepts
+- Few lines of code
+### Easy
+- Basic concepts
+- Medium Size Code
+### Medium
+- Intermediate concepts
+- Medium Size Code
+### Hard
+- Advanced concepts
+- Medium Size Code
+### Very Hard
+- Advanced concepts
+- A lot of lines of code
