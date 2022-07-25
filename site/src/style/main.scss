@@ -1,6 +1,7 @@
 @import "variables.scss";
 @import "box.scss";
 @import "content-base.scss";
+
 *{
     margin: 0;
     padding: 0;
@@ -20,6 +21,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+
     min-height: 100vh;
     .debug-color{
       color: red;
@@ -28,12 +30,21 @@ body {
       font-style: italic;
       font-weight: bold;
       color: white;
-      margin-top: 10px;
+      margin-top: 15px;
       letter-spacing: 2px;
+      &.center{
+
+        margin-left: 300px;
+        margin-top: 50px;
+
+      }
     }
     .start-button{
+      position: absolute;
       font-style: italic;
       font-weight: bold;
+      left: 600px;
+
     }
     .desc{
       text-align: center;
@@ -42,6 +53,18 @@ body {
     .flex{
       display: flex;
       margin-top: 10px;
+    }
+    .inputs{
+      display: flex;
+      margin-top: 40px;
+      gap: 15px;
+      align-self: flex-start;
+      &.registration{
+        justify-content: center;
+      }
+      .editor{
+        width: 100px;
+      }
     }
   }
 }
