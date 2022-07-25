@@ -4,6 +4,8 @@ import { CodeBlock, dracula } from "react-code-blocks";
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
 import {useState, useCallback, useEffect} from "react";
 import useWebSocket, { ReadyState } from 'react-use-websocket';
+import CodeMirror from '@uiw/react-codemirror';
+import { python } from "@codemirror/lang-python";
 
 export const WebSocketDemo = () => {
     //Public API that will echo messages sent to it back to the client
@@ -68,7 +70,24 @@ const Categories = () => {
 const LandingPage = () =>{
     return (
         <div>
+            <div className="inputs registration">
+                <input type="text" className="input-base" placeholder="Username: "/>
+                <input type="text" className="input-base" placeholder="Password"/>
+                <button className="bb-buton small-height">Connect</button>
+            </div>
             <Link to="/categories"><button className="bb-buton start-button">Start game</button></Link>
+            <h1 className="main-title center">Add custom questions </h1>
+            <div className="inputs">
+                <input type="text" className="input-base" placeholder="Correct answer:"/>
+                <input type="text" className="input-base" placeholder="Question title:"/>
+                <input type="text" className="input-base" placeholder="Question explanation:"/>
+            </div>
+          <CodeMirror
+              value="console.log('hello world!');"
+              height="200px"
+              extensions={[python()]}
+
+    />
         </div>
 
 
@@ -100,7 +119,7 @@ const Box = () =>{
                         Features
                     </button>
                     <button className="bb-buton upload">
-                        Upload my own question
+                        Upload my own question!
                     </button>
                 </div>
           </div>

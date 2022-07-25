@@ -1,5 +1,4 @@
 .bb-buton{
-            margin: 15px;
             font-size: 16px;
             background: $blue-hover-color;
             color: white;
@@ -9,7 +8,9 @@
             transition: 270ms ease-in-out;
             padding: 6px;
             font-family: inherit;
-
+            &.small-height{
+              height: 35px !important;
+            }
             &:hover {
                 background-color: #0c46c7;
                 color: white;
@@ -68,5 +69,32 @@
   border: 2px solid #005eff;
   &:hover{
     background: #222a41;
+  }
+}
+.input-base{
+          resize: vertical;
+          font-family:inherit;
+          background: white;
+          margin-left: 15px;
+          color: black;
+          font-size: $medium-font-size;
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.25rem;
+          overflow-wrap: break-word;
+          overflow-y: scroll;
+          user-select: none;
+          margin-bottom: 25px;
+          width: $input-width;
+          max-width: calc(#{$form-container-width} - 15px*2.5);
+          font-weight: bold;
+   &::placeholder{
+       font-size:15px;
+
+   }
+  &:focus {
+          outline-style: none;
+          transition: 250ms ease-in-out;
+          border-color: $blue-hover-color;
+          box-shadow: 2px 2px 2px 1px $blue-hover-color;
   }
 }
