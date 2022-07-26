@@ -8,16 +8,25 @@ from fastapi.responses import HTMLResponse
 import db.api
 from utilites.logger_utility import setup_logger
 
+
+def __read_file(file_path):
+    with open(file_path, 'r') as file:
+        file_as_string = file.read()
+    return file_as_string
+
+
 logger = setup_logger()
 app = FastAPI()
 # FIXME: Should only be done once, clears the database
 db.api.initiate_database()
-db.api.insert_question(
-    question='This is a question, pretend it is nicely formatted',
-    answer='Bug',
-    title='Question title, hint: the answer is Bug',
-    expl='This is just a placeholder')
+problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
+                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
+                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1)]
 
+for script, answer, title, explanation, difficulty in problems_keywords:
+    script = __read_file(f"problems/scripts/{script}")
+    explanation = __read_file(f"problems/explanations/{explanation}")
+    db.api.insert_question(script, answer, title, explanation, difficulty)
 
 # FIXME: move to App.js
 html_quiz_solve_page = """
