@@ -76,8 +76,11 @@ $npm --version
 ```
 
 ### Node Windows setup
-FIXME: Insert
-
+```
+https://nodejs.org/en/download/
+node -v
+v14.18.1
+```
 ### Node common setup
 For both Windows and Linux, install project dependencies with
 ```
