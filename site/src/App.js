@@ -67,15 +67,20 @@ const Categories = () => {
 }
 
 const LandingPage = () =>{
-    var ws = null;
+    // Note: state is changed from keeping the url to keeping the ws connection object upon user pressing connect button.
+    const [getSocket, setSocket] = useState('ws://localhost:8000/ws');
+
     const connect_event = (event) =>{
+	console.log("connect_event")
         var itemId = document.getElementById("itemID")
         var token = document.getElementById("token")
-        ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+        var ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+	setSocket(ws)
 	
         ws.onmessage = function(event) {
             console.log(event.data)
             const data_parsed = JSON.parse(event.data)
+	    console.log(data_parsed)
             switch (data_parsed.type) {
             default:
                 var messages = document.getElementById('messages')
@@ -88,25 +93,21 @@ const LandingPage = () =>{
         event.preventDefault()
     }
     const add_new_question = (event) =>{
-	// FIXME: Avoid copy paste and creating a new connection each time
-        var itemId = document.getElementById("itemID")
-        var token = document.getElementById("token")
-        ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+	var ws = getSocket
 	
         var new_question_text = document.getElementById("newQuestionText")
         var correct_answer = document.getElementById("correctAnswer")
         var new_question_title = document.getElementById("newQuestionTitle")
         var new_question_explanation = document.getElementById("newQuestionExplanation")
-	ws.onopen = function(event) {
-            const request = {
-		type: "new_question",
-		question: new_question_text.value,
-		correct_answer: correct_answer.value,
-		new_question_title: new_question_title.value,
-		new_question_explanation: new_question_explanation.value
-	    };
-            ws.send(JSON.stringify(request))
-          };
+        const request = {
+	    type: "new_question",
+	    question: new_question_text.value,
+	    correct_answer: correct_answer.value,
+	    new_question_title: new_question_title.value,
+	    new_question_explanation: new_question_explanation.value
+	};
+	console.log(request)
+        ws.send(JSON.stringify(request))
 
         new_question_text.value = ''
         event.preventDefault()
@@ -128,6 +129,10 @@ const LandingPage = () =>{
                 <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
                 <button className="bb-buton small-height" onClick={(event) => add_new_question(event)}>Send</button>
             </div>
+	    <div className="debug">
+		<ul id='messages'>
+		</ul>
+	    </div>
         </div>
     )
 }

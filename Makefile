@@ -1,5 +1,5 @@
 serve:
-	poetry run uvicorn main:app --reload
+	poetry run uvicorn main:app --reload & (cd site/;npm start)
 
 lint:
 	poetry run pre-commit run --all-files
