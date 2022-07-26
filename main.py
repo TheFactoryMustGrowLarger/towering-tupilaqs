@@ -8,82 +8,25 @@ from fastapi.responses import HTMLResponse
 import db.api
 from utilites.logger_utility import setup_logger
 
+
+def __read_file(file_path):
+    with open(file_path, 'r') as file:
+        file_as_string = file.read()
+    return file_as_string
+
+
 logger = setup_logger()
 app = FastAPI()
 # FIXME: Should only be done once, clears the database
 db.api.initiate_database()
-db.api.insert_question(
-    question='''def multiplication(a, b):
-    """This function multiplies 2 numbers"""
-    return a*b''',
-    answer='Feature',
-    title='Multiplication',
-    expl='There is not that much to say, * operator multiples 2 numbers!',
-    diff=0)
-db.api.insert_question(
-    question='''def square_of_a_number(a):
-    """This function calculates the square of a number."""
-    return a ^ 2''',
-    answer='Bug',
-    title='Square_of_a_number',
-    expl='''Almost everyone has made this mistake once! In Python `^` is the[XOR operator]
-("https://docs.python.org/3/reference/expressions.html#binary-bitwise-operations") \
-while the power of a number is represented by `**`.
-# Corrected code
-```
-5 return a ** 2
-```''',
-    diff=0)
-db.api.insert_question(
-    question='''import random
+problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
+                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
+                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1)]
 
-
-def slot_machine():
-    """The following simulates a slot machine with 3 entries.
-
-    Each entry shows a number between 0 and 9.
-    It will always return the numbers rolled and a message.
-    If all the numbers are the same, the message is "Jackpot!",
-    if 2 numbers are the same, the message is "Good roll"" and
-    if they are all different, the message is "Try again, you will be luckier".
-    """
-    digits = range(10)
-    first_n = random.choice(digits)
-    second_n = random.choice(digits)
-    third_n = random.choice(digits)
-    roll = [first_n, second_n, third_n]
-    if __all_numbers_are_the_same(roll):
-        return roll, "Jackpot!"
-    elif __two_numbers_are_the_same(roll):
-        return roll, "Good roll!"
-    else:
-        return roll, "Try again, you will be luckier!"
-
-
-def __all_numbers_are_the_same(numbers):
-    return set(numbers) == 1
-
-
-def __two_numbers_are_the_same(numbers):
-    return set(numbers) == 2
-
-
-print(slot_machine())''',
-    answer='Bug',
-    title='Slot machine',
-    expl='''The first 2 conditional statements will always be False, \
-we are comparing a set and an integer they will always be different!
-The code can be fixed by applying a len() function to the set of each function.
-Now we're comparing 2 integers as it was intended!
-#### Corrected code
-```
-26 def all_numbers_are_the_same(numbers):
-27     return len(set(numbers)) == 1
-28
-29
-30 def two_numbers_are_the_same(numbers):
-31     return len(set(numbers)) == 2
-```''', diff=1)
+for script, answer, title, explanation, difficulty in problems_keywords:
+    script = __read_file(f"problems/scripts/{script}")
+    explanation = __read_file(f"problems/explanations/{explanation}")
+    db.api.insert_question(script, answer, title, explanation, difficulty)
 
 # FIXME: Should be changed to serve the frontend index.html
 html = """
@@ -317,13 +260,13 @@ def process_new_answer(user, event):
     return ret
 
 
-@ app.get("/")
+@app.get("/")
 async def get_main_page():
     """Returns the main html body"""
     return HTMLResponse(html)
 
 
-@ app.get("/solve_quiz")
+@app.get("/solve_quiz")
 async def get_quiz_page():
     """Returns the quiz html body,
 
@@ -343,7 +286,7 @@ async def get_cookie_or_token(
     return session or token
 
 
-@ app.websocket("/solve_quiz/{item_id}/ws")
+@app.websocket("/solve_quiz/{item_id}/ws")
 async def websocket_endpoint_quiz(
     websocket: WebSocket,
     item_id: str,
@@ -379,7 +322,7 @@ async def websocket_endpoint_quiz(
             logger.error('Unrecognized type "%s"', event['type'])
 
 
-@ app.websocket("/new_question/{item_id}/ws")
+@app.websocket("/new_question/{item_id}/ws")
 async def websocket_endpoint(
     websocket: WebSocket,
     item_id: str,
