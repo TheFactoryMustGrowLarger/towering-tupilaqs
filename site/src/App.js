@@ -71,6 +71,7 @@ const LandingPage = () =>{
     const [getSocket, setSocket] = useState('ws://localhost:8000/ws');
 
     const connect_event = (event) =>{
+	event.preventDefault()
 	console.log("connect_event")
         var itemId = document.getElementById("itemID")
         var token = document.getElementById("token")
@@ -90,9 +91,9 @@ const LandingPage = () =>{
                 messages.appendChild(message)
             }
         };
-        event.preventDefault()
     }
     const add_new_question = (event) =>{
+	event.preventDefault()
 	var ws = getSocket
 	
         var new_question_text = document.getElementById("newQuestionText")
@@ -110,7 +111,6 @@ const LandingPage = () =>{
         ws.send(JSON.stringify(request))
 
         new_question_text.value = ''
-        event.preventDefault()
     }
 
     return (
