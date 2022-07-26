@@ -43,7 +43,7 @@ body {
       position: absolute;
       font-style: italic;
       font-weight: bold;
-      left: 600px;
+      left: 50%;
 
     }
     .desc{
@@ -65,6 +65,10 @@ body {
       .editor{
         width: 100px;
       }
+    }
+    .debug{
+	display: none;
+	color: #8c03fc;
     }
   }
 }

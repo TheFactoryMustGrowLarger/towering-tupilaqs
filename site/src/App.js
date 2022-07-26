@@ -1,31 +1,31 @@
-import React from "react";
 import "./style/main.scss";
 import { CodeBlock, dracula } from "react-code-blocks";
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
-import {useState, useCallback, useEffect} from "react";
+
+import React, { useState, useCallback, useEffect } from 'react';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import CodeMirror from '@uiw/react-codemirror';
-import { python } from "@codemirror/lang-python";
 
 export const WebSocketDemo = () => {
-    //Public API that will echo messages sent to it back to the client
-    const [socketUrl, setSocketUrl] = useState('wss://echo.websocket.org');
-    const [messageHistory, setMessageHistory] = useState([]);
+  //Public API that will echo messages sent to it back to the client
+  const [socketUrl, setSocketUrl] = useState('ws://localhost:8000/ws');
+  const [messageHistory, setMessageHistory] = useState([]);
 
-    const {sendMessage, lastMessage, readyState} = useWebSocket(socketUrl);
+  const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
-    useEffect(() => {
-        if (lastMessage !== null) {
-            setMessageHistory((prev) => prev.concat(lastMessage));
-        }
-    }, [lastMessage, setMessageHistory]);
+  useEffect(() => {
+    if (lastMessage !== null) {
+      setMessageHistory((prev) => prev.concat(lastMessage));
+    }
+  }, [lastMessage, setMessageHistory]);
 
-    const handleClickChangeSocketUrl = useCallback(
-        () => setSocketUrl('wss://demos.kaazing.com/echo'),
-        []
-    );
-    const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
-     const connectionStatus = {
+  const handleClickChangeSocketUrl = useCallback(
+    () => setSocketUrl('ws://localhost:8000/solve_quiz'),
+    []
+  );
+
+  const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
+
+  const connectionStatus = {
     [ReadyState.CONNECTING]: 'Connecting',
     [ReadyState.OPEN]: 'Open',
     [ReadyState.CLOSING]: 'Closing',
@@ -44,7 +44,7 @@ export const WebSocketDemo = () => {
       >
         Click Me to send 'Hello'
       </button>
-      <span className="debug-color">The WebSocket is currently {connectionStatus}</span>
+      <span>The WebSocket is currently {connectionStatus}</span>
       {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
       <ul>
         {messageHistory.map((message, idx) => (
@@ -54,7 +54,6 @@ export const WebSocketDemo = () => {
     </div>
   );
 };
-
 
 
 const Categories = () => {
@@ -68,29 +67,73 @@ const Categories = () => {
 }
 
 const LandingPage = () =>{
+    // Note: state is changed from keeping the url to keeping the ws connection object upon user pressing connect button.
+    const [getSocket, setSocket] = useState('ws://localhost:8000/ws');
+
+    const connect_event = (event) =>{
+	event.preventDefault()
+	console.log("connect_event")
+        var itemId = document.getElementById("itemID")
+        var token = document.getElementById("token")
+        var ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
+	setSocket(ws)
+	
+        ws.onmessage = function(event) {
+            console.log(event.data)
+            const data_parsed = JSON.parse(event.data)
+	    console.log(data_parsed)
+            switch (data_parsed.type) {
+            default:
+                var messages = document.getElementById('messages')
+                var message = document.createElement('li')
+                var content = document.createTextNode(data_parsed.data)
+                message.appendChild(content)
+                messages.appendChild(message)
+            }
+        };
+    }
+    const add_new_question = (event) =>{
+	event.preventDefault()
+	var ws = getSocket
+	
+        var new_question_text = document.getElementById("newQuestionText")
+        var correct_answer = document.getElementById("correctAnswer")
+        var new_question_title = document.getElementById("newQuestionTitle")
+        var new_question_explanation = document.getElementById("newQuestionExplanation")
+        const request = {
+	    type: "new_question",
+	    question: new_question_text.value,
+	    correct_answer: correct_answer.value,
+	    new_question_title: new_question_title.value,
+	    new_question_explanation: new_question_explanation.value
+	};
+	console.log(request)
+        ws.send(JSON.stringify(request))
+
+        new_question_text.value = ''
+    }
+
     return (
         <div>
             <div className="inputs registration">
-                <input type="text" className="input-base" placeholder="Username: "/>
-                <input type="text" className="input-base" placeholder="Password"/>
-                <button className="bb-buton small-height">Connect</button>
+                <input type="text" className="input-base" id="itemID" placeholder="Username: "/>
+                <input type="text" className="input-base" id="token" placeholder="Password"/>
+                <button className="bb-buton small-height" onClick={(event) => connect_event(event)}>Connect</button>
             </div>
             <Link to="/categories"><button className="bb-buton start-button">Start game</button></Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
-                <input type="text" className="input-base" placeholder="Correct answer:"/>
-                <input type="text" className="input-base" placeholder="Question title:"/>
-                <input type="text" className="input-base" placeholder="Question explanation:"/>
+                <input type="text" className="input-base" id="newQuestionText" placeholder="New Question: "/>
+                <input type="text" className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
+                <input type="text" className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
+                <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
+                <button className="bb-buton small-height" onClick={(event) => add_new_question(event)}>Send</button>
             </div>
-          <CodeMirror
-              value="console.log('hello world!');"
-              height="200px"
-              extensions={[python()]}
-
-    />
+	    <div className="debug">
+		<ul id='messages'>
+		</ul>
+	    </div>
         </div>
-
-
     )
 }
 
