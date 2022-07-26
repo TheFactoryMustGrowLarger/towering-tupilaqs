@@ -214,7 +214,8 @@ async def get_cookie_or_token(
 
 
 @app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_echo(websocket: WebSocket):
+    """Simple endpoint that echoes back all websocket messages"""
     await websocket.accept()
     while True:
         data = await websocket.receive_text()

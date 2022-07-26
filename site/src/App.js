@@ -77,7 +77,7 @@ const LandingPage = () =>{
         var token = document.getElementById("token")
         var ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
 	setSocket(ws)
-	
+
         ws.onmessage = function(event) {
             console.log(event.data)
             const data_parsed = JSON.parse(event.data)
@@ -95,7 +95,7 @@ const LandingPage = () =>{
     const add_new_question = (event) =>{
 	event.preventDefault()
 	var ws = getSocket
-	
+
         var new_question_text = document.getElementById("newQuestionText")
         var correct_answer = document.getElementById("correctAnswer")
         var new_question_title = document.getElementById("newQuestionTitle")
