@@ -19,74 +19,7 @@ db.api.insert_question(
     expl='This is just a placeholder')
 
 
-# FIXME: Should be changed to serve the frontend index.html
-html = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebSocket Quiz - Bug, Feature or Tupilaqs</title>
-    </head>
-    <body>
-        <h1>WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
-        <h2>Add new question</h1>
-        <form action="" onsubmit="addNewQuestion(event)">
-            <label>Username: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
-            <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-            <button onclick="connect(event)">Connect</button>
-            <hr>
-            <label>New Question: <input type="text" id="newQuestionText" autocomplete="off"/></label>
-            <label>Correct answer: <input type="text" id="correctAnswer" autocomplete="off"/></label>
-            <label>Question title: <input type="text" id="newQuestionTitle" autocomplete="off"/></label>
-            <label>Question explanation (shown after user has answered): <input type="text"
-                   id="newQuestionExplanation" autocomplete="off"/></label>
-            <button>Send</button>
-        </form>
-
-        <ul id='messages'>
-        </ul>
-        <script>
-        var ws = null;
-
-            function connect(event) {
-                var itemId = document.getElementById("itemId")
-                var token = document.getElementById("token")
-                ws = new WebSocket("ws://localhost:8000/new_question/" + itemId.value + "/ws?token=" + token.value);
-                ws.onmessage = function(event) {
-                    console.log(event.data)
-                    const data_parsed = JSON.parse(event.data)
-                    switch (data_parsed.type) {
-                      default:
-                        var messages = document.getElementById('messages')
-                        var message = document.createElement('li')
-                        var content = document.createTextNode(data_parsed.data)
-                        message.appendChild(content)
-                        messages.appendChild(message)
-                  }
-                };
-                event.preventDefault()
-            }
-            function addNewQuestion(event) {
-                var new_question_text = document.getElementById("newQuestionText")
-                var correct_answer = document.getElementById("correctAnswer")
-                var new_question_title = document.getElementById("newQuestionTitle")
-                var new_question_explanation = document.getElementById("newQuestionExplanation")
-                const response = {
-                  type: "new_question",
-                  question: new_question_text.value,
-                  correct_answer: correct_answer.value,
-                  new_question_title: new_question_title.value,
-                  new_question_explanation: new_question_explanation.value
-                };
-                ws.send(JSON.stringify(response))
-                new_question_text.value = ''
-                event.preventDefault()
-            }
-        </script>
-    </body>
-</html>
-"""
-
-# Copy-paste for the quiz page
+# FIXME: move to App.js
 html_quiz_solve_page = """
 <!DOCTYPE html>
 <html>
@@ -258,12 +191,6 @@ def process_new_answer(user, event):
 
     logger.info('process_new_answer(%s, %s, """%s""") -> %s' % (user, user_answer, question.txt, ret))
     return ret
-
-
-@app.get("/")
-async def get_main_page():
-    """Returns the main html body"""
-    return HTMLResponse(html)
 
 
 @app.get("/solve_quiz")

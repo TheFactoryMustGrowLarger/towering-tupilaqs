@@ -91,7 +91,7 @@ npm start
 ```
 
 ## Run
-To serve the initial webpage, use
+To serve the initial webpage and python websocket, use
 ```
 poetry run uvicorn main:app --reload
 ```
@@ -99,7 +99,7 @@ also available as `make serve` if you have make.
 
 This should serve two preliminary webpages:
 
-- http://127.0.0.1:8000
+- http://127.0.0.1:3000
 - http://127.0.0.1:8000/solve_quiz?
 
 Python code will log to `tupilaqs.log`.
