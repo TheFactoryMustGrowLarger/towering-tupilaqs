@@ -3,7 +3,7 @@ import { CodeBlock, dracula } from "react-code-blocks";
 import { BrowserRouter, Routes, Route, Link} from "react-router-dom"
 
 import React, { useState, useCallback, useEffect } from 'react';
-import useWebSocket, { ReadyState } from 'react-use-websocket';
+import useWebSocket, { ReadyState  } from 'react-use-websocket';
 
 export const WebSocketDemo = () => {
   //Public API that will echo messages sent to it back to the client
@@ -56,15 +56,6 @@ export const WebSocketDemo = () => {
 };
 
 
-const Categories = () => {
-    return(
-        <div className="flex">
-            <button>1</button>
-            <button>2</button>
-            <button>3</button>
-        </div>
-    )
-}
 
 const LandingPage = () =>{
     // Note: state is changed from keeping the url to keeping the ws connection object upon user pressing connect button.
@@ -137,22 +128,25 @@ const LandingPage = () =>{
     )
 }
 
+//FIXME: Did not work: function CodeBox({ getQuestion }) {
 const Box = () =>{
+    // function connect(event) {
+    //     event.preventDefault()
+    //     var itemId = document.getElementById("itemId")
+    //     var token = document.getElementById("token")
+    //     ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
+    //     ws.onopen = function(event) {
+            // const request = {
+	    // 	type: "serve_new_question",
+            // };
+            // ws.send(JSON.stringify(request))
+    // };
+    // Need to share this at a higher level of the code I think?
+    const [getQuestion, setQuestion] = useState("print('hello world')");
     return (
          <div className="box">
                     <div className="code-snippet">
-                    <MyCoolCodeBlock code={`class Dog:
-                          #init creates certain parameters that allow you to define information quickly.
-                          def __init__(self, name):
-                            self.name = name
-
-                          def get_name(self):
-                        \treturn self.name
-
-                        if __name__ == "__main__":
-                          d = Dog(str(input("name your dog: "))
-                          print(d.get_name())
-                          `} language={"python"} showLineNumbers={true} startingLineNumber={1} theme={dracula} />
+			<MyCoolCodeBlock code={getQuestion}/>
                 </div>
                 <div className="buttons">
                     <button className="bb-buton bug">
@@ -170,31 +164,33 @@ const Box = () =>{
     )
 }
 
-function MyCoolCodeBlock({ code, language, showLineNumbers, startingLineNumber }) {
+function MyCoolCodeBlock({ code, language }) {
   return (<CodeBlock
-    text={code}
-    language={language}
-    showLineNumbers={showLineNumbers}
-    startingLineNumber={startingLineNumber}
-    theme={dracula}
-    codeBlock
-  />);
+	      text={code}
+	      language={"python"}
+	      showLineNumbers={true}
+	      startingLineNumber={1}
+	      theme={dracula}
+	      codeBlock
+	  />);
 }
 
 function App() {
-  return (
-      <BrowserRouter>
-          <div className="App">
-              <h1 className="main-title">WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
-              <Routes>
-                  <Route path="/categories/:category" element={<Box/>}/>
-                  <Route path="/" element={<LandingPage/>}/>
-                  <Route path="/categories" element={<Categories/>}/>
-              </Routes>
-    </div>
-      </BrowserRouter>
+    // Tried to define this useState at this level, and then pass the getQuestion reference down to the CodeBox function
+    //const [getQuestion, setQuestion] = useState("print('hello world')");
+    //FIXME:Did not work: <Route path="/categories" element={CodeBox(getQuestion)}/>
 
-  );
+    return (
+	<BrowserRouter>
+            <div className="App">
+		<h1 className="main-title">WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
+		<Routes>
+		    <Route path="/categories" element={<Box/>}/>
+                    <Route path="/" element={<LandingPage/>}/>
+		</Routes>
+	    </div>
+	</BrowserRouter>
+    );
 }
 
 export default App;
