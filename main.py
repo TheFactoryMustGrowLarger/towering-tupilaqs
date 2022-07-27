@@ -163,9 +163,10 @@ def process_new_question(event) -> str:
     return db.api.insert_question(**database_insert)
 
 
-def process_serve_new_question(event):
+def process_serve_new_question(user, event):
     """Takes in a json event (content ignored for now) and requests a new question from the database"""
     # FIXME: avoid showing the same question twice
+    # user_uuid = get_or_create_user(user)
     result = db.api.get_all_questions()  # FIXME: avoid fetching for all questions
 
     ret = dict(txt='This is a question, pretend it is nicely formatted',
