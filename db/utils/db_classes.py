@@ -37,8 +37,8 @@ class Combined:
     title: str
     expl: str
     difficulty: int
-    ident: str
     votes: int
+    ident: str
 
 
 @dataclass
@@ -48,4 +48,19 @@ class User:
     id: int
     user_name: str
     correct_answers: str
+    incorrect_answers: str
     ident: str
+
+
+@dataclass
+class UserCA:
+    """User correct answers Type Struct"""
+
+    correct_answers: str
+
+
+@dataclass
+class UserIA:
+    """User incorrect answers Type Struct"""
+
+    incorrect_answers: str
