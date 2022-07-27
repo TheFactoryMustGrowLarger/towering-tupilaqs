@@ -3,6 +3,7 @@ import random
 import secrets
 from typing import Union
 
+import psycopg
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status
 from fastapi.responses import HTMLResponse
 
@@ -27,7 +28,11 @@ problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication'
 for script, answer, title, explanation, difficulty in problems_keywords:
     script = __read_file(f"problems/scripts/{script}")
     explanation = __read_file(f"problems/explanations/{explanation}")
-    db.api.insert_question(script, answer, title, explanation, difficulty)
+    try:
+        db.api.insert_question(script, answer, title, explanation, difficulty)
+    except psycopg.errors.StringDataRightTruncation as e:
+        logger.error('Too long! %s, script=%s, answer=%s, title=%s, explanation=%s, difficulty=%s',
+                     e, script, answer, title, explanation, difficulty)
 
 # FIXME: move to App.js
 html_quiz_solve_page = """

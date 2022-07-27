@@ -3,7 +3,7 @@ questions = '''
             ID SERIAL PRIMARY KEY,
             TXT TEXT NOT NULL,
             TITLE CHAR(100) NOT NULL,
-            EXPL CHAR(100) NOT NULL,
+            EXPL TEXT NOT NULL,
             DIFFICULTY SMALLINT NOT NULL,
             IDENT VARCHAR(100) NOT NULL,
             VOTES SMALLINT
