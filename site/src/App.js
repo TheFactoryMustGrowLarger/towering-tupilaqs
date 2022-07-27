@@ -2,60 +2,8 @@ import "./style/main.scss";
 import {CodeBlock, dracula} from "react-code-blocks";
 import {BrowserRouter, Link, Route, Routes} from "react-router-dom"
 
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import useWebSocket, {ReadyState} from 'react-use-websocket';
-import {logDOM} from "@testing-library/react";
-import {None} from "framer-motion";
+import React, {useEffect, useRef, useState} from 'react';
 
-// export const WebSocketDemo = () => {
-//   //Public API that will echo messages sent to it back to the client
-//   const [socketUrl, setSocketUrl] = useState('ws://localhost:8000/ws');
-//   const [messageHistory, setMessageHistory] = useState([]);
-//
-//   const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
-//
-//   useEffect(() => {
-//     if (lastMessage !== null) {
-//       setMessageHistory((prev) => prev.concat(lastMessage));
-//     }
-//   }, [lastMessage, setMessageHistory]);
-//
-//   const handleClickChangeSocketUrl = useCallback(
-//     () => setSocketUrl('ws://localhost:8000/solve_quiz'),
-//     []
-//   );
-//
-//   const handleClickSendMessage = useCallback(() => sendMessage('Hello'), []);
-//
-//   const connectionStatus = {
-//     [ReadyState.CONNECTING]: 'Connecting',
-//     [ReadyState.OPEN]: 'Open',
-//     [ReadyState.CLOSING]: 'Closing',
-//     [ReadyState.CLOSED]: 'Closed',
-//     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-//   }[readyState];
-//
-//   return (
-//     <div>
-//       <button onClick={handleClickChangeSocketUrl}>
-//         Click Me to change Socket Url
-//       </button>
-//       <button
-//         onClick={handleClickSendMessage}
-//         disabled={readyState !== ReadyState.OPEN}
-//       >
-//         Click Me to send 'Hello'
-//       </button>
-//       <span>The WebSocket is currently {connectionStatus}</span>
-//       {lastMessage ? <span>Last message: {lastMessage.data}</span> : null}
-//       <ul>
-//         {messageHistory.map((message, idx) => (
-//           <span key={idx}>{message ? message.data : null}</span>
-//         ))}
-//       </ul>
-//     </div>
-//   );
-// };
 
 const createMessage = (type, data) => {
     return JSON.stringify({ 'type': type, 'data': data});
@@ -69,26 +17,45 @@ const debugMessage = (type, data) => {
 
 const LandingPage = (props) =>{
     const { webSocket } = props;
+    const [user_name, set_user_name] = useState("")
+    const [error, set_error] = useState("")
     const add_new_question = (e) => {
         e.preventDefault();
+        if(user_name){
+               const itemId = document.getElementById("itemID").value;
+               const new_question_text = document.getElementById("newQuestionText").value;
+               const correct_answer = document.getElementById("correctAnswer").value;
+               const new_question_title = document.getElementById("newQuestionTitle").value;
+               const new_question_explanation = document.getElementById("newQuestionExplanation").value;
 
-        const itemId = document.getElementById("itemID").value;
-        const new_question_text = document.getElementById("newQuestionText").value;
-        const correct_answer = document.getElementById("correctAnswer").value;
-        const new_question_title = document.getElementById("newQuestionTitle").value;
-        const new_question_explanation = document.getElementById("newQuestionExplanation").value;
-
-        const request = {
-            user: itemId,
-            question: new_question_text,
-            correct_answer: correct_answer,
-            new_question_title: new_question_title,
-            new_question_explanation: new_question_explanation,
-        };
+                const request = {
+                    user: itemId,
+                    question: new_question_text,
+                    correct_answer: correct_answer,
+                    new_question_title: new_question_title,
+                    new_question_explanation: new_question_explanation,
+                };
 
 
-        webSocket.send(createMessage('new_question', request))
-        //clearAddQ();
+                webSocket.send(createMessage('new_question', request))
+        }
+        else{
+            set_error("The user name field must be filled in")
+        }
+
+        clearAddQ();
+    }
+
+    const check_start_game = () => {
+        let itemId = user_name
+        if(user_name){
+            const request = {
+                user: itemId
+            }
+        }
+        else{
+            set_error("The username field must be filled in")
+        }
     }
 
     const clearAddQ = () => {
@@ -101,9 +68,10 @@ const LandingPage = (props) =>{
     return (
         <div>
             <div className="inputs registration">
-                <input type="text" className="input-base" id="itemID" placeholder="Username: "/>
+                <input type="text" value={user_name} onChange={e => set_user_name(e.target.value)} className="input-base" id="itemID" placeholder="Username: "/>
+                 <p className="error">{error}</p>
             </div>
-            <Link to="/categories"><button className="bb-button start-button">New Game</button></Link>
+            <Link to={user_name ? "/categories" : ""}><button className="bb-button start-button" onClick={check_start_game}>New Game</button></Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
                 <input type="text" className="input-base" id="newQuestionText" placeholder="New Question: "/>
@@ -111,6 +79,7 @@ const LandingPage = (props) =>{
                 <input type="text" className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
                 <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
                 <button className="bb-button small-height" onClick={(e) => add_new_question(e)}>Send</button>
+
             </div>
             <div className="debug">
                 <ul id='messages'>
@@ -133,7 +102,7 @@ const Box = (props) =>{
     return (
          <div className="box">
                 <div className="code-snippet">
-                    <MyCoolCodeBlock code={getQuestion}/>
+                    <MyCoolCodeBlock code={getQuestion} language={"python"}/>
                 </div>
                 <div className="buttons">
                     <button className="bb-button bug">
@@ -154,7 +123,7 @@ const Box = (props) =>{
 function MyCoolCodeBlock({ code, language }) {
   return (<CodeBlock
 	      text={code}
-	      language={"python"}
+	      language={language}
 	      showLineNumbers={true}
 	      startingLineNumber={1}
 	      theme={dracula}
@@ -210,7 +179,7 @@ function App() {
 	<BrowserRouter>
         <div className="App">
             <h1 className="main-title">WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
-            <h1 className="main-title">{token}</h1>
+
             <Routes>
                 <Route path="/" element={<LandingPage webSocket={ws.current}/>}/>
                 <Route path="/categories" element={<Box webSocket={ws.current} wsMessage={wsMessage}/>} />
