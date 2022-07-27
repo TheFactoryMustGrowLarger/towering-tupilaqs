@@ -58,15 +58,24 @@ body {
       display: flex;
       margin-top: 40px;
       gap: 15px;
-      align-self: flex-start;
+      align-content: center;
+      .error{
+        color: red;
+        font-weight: bold;
+        font-style: italic;
+        justify-content: center;
+      }
       &.registration{
         justify-content: center;
+        align-items: center;
+
       }
       .editor{
         width: 100px;
       }
     }
     .debug{
+     display: none;
 	color: #8c03fc;
     }
   }
