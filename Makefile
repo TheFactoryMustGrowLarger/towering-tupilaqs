@@ -9,5 +9,6 @@ test:
 	poetry run python -m doctest example/equal.py
 
 install:
+	(cd site;npm install)
 	poetry install
 	poetry run pre-commit install
