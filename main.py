@@ -1,5 +1,6 @@
 import json
 import random
+import secrets
 from typing import Union
 
 from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status
@@ -121,18 +122,17 @@ def get_or_create_user(user):
     if u is not None:
         user_uuid = u.ident
     else:
-        db.api.add_user(user)  # FIXME: password?
-        user_uuid = db.api.get_user_by_name(user)
+        user_uuid = db.api.add_user(user)  # FIXME: password?
 
     return user_uuid
 
 
-def process_new_question(user, event):
+def process_new_question(event) -> str:
     """Takes in a json event and extracts fields to go into database
 
     Note: assumes frontend takes care of input sanitization
     """
-    user_uuid = get_or_create_user(user)
+    user_uuid = get_or_create_user(event['user'])
 
     # FIXME: add difficulty to event
     difficulty = 0
@@ -146,10 +146,10 @@ def process_new_question(user, event):
     logger.info('Inserting %s by user uuid %s', database_insert, user_uuid)
 
     # FIXME: add question to user_uuid to give user a score for submitting good questions
-    db.api.insert_question(**database_insert)
+    return db.api.insert_question(**database_insert)
 
 
-def process_serve_new_question(user, event):
+def process_serve_new_question(event):
     """Takes in a json event (content ignored for now) and requests a new question from the database"""
     # FIXME: avoid showing the same question twice
     result = db.api.get_all_questions()  # FIXME: avoid fetching for all questions
@@ -213,14 +213,34 @@ async def get_cookie_or_token(
     return session or token
 
 
-@app.websocket("/ws")
-async def websocket_echo(websocket: WebSocket):
-    """Simple endpoint that echoes back all websocket messages"""
+@app.websocket("/quiz")
+async def websocket_echo(
+        websocket: WebSocket,
+):
+    """Handle all the shizz"""
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
-        logger.debug('echo: %s', data)
-        await websocket.send_text(f"Message text was: {data}")
+        logger.debug('quiz-received-data: %s', data)
+        event = json.loads(data)
+        if event['type'] == 'token_pls':
+            await websocket.send_json(
+                {
+                    'type': 'auth',
+                    'data': {
+                        'token': secrets.token_urlsafe()
+                    }
+                }
+            )
+        elif event['type'] == 'new_question':
+            print(event['data'])
+            a = process_new_question(event=event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'return',
+                    'data': a
+                }
+            )
 
 
 @app.websocket("/solve_quiz/{item_id}/ws")
