@@ -40,6 +40,7 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
     const [NewQuestionTitle, SetNewQuestionTitle] = useState("")
     const [NewQuestionExplanation, SetNewQuestionExplanation] = useState("")
 
+
     const add_new_question = (e) => {
         e.preventDefault();
         if (userName) {
@@ -114,8 +115,21 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
 //FIXME: Did not work: function CodeBox({ getQuestion }) {
 const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExplanation, getExplanation}) => {
     const [isStarted, setStarted] = useState(false);
-    console.log(questions.expl)
-    console.log(getExplanation)
+    const singleQuestion = questions[0] ? questions[0] : {
+        'txt': 'placeholder',
+        'title': 'placeholder title',
+        'expl': 'placeholder expl',
+        'difficulty': 0,
+        'votes': 0,
+    };
+    const handleNextQuestions = () => {
+
+        const data = {
+            'user_name': userName,
+        }
+        webSocket?.send(createMessage('get_question', data));
+    }
+
     useEffect(() => {
         if (isStarted) return;
         startGame();
@@ -128,7 +142,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
         const data = {
             'user_name': userName
         }
-        webSocket?.send(createMessage('get_question', data));
+        handleNextQuestions();
         setStarted(true);
     }
 
@@ -142,17 +156,16 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
 
         const data = {
             'user_name': userName,
-	    'question_uuid': questions.ident,
-	    'user_answer': guess
+	        'question_uuid': singleQuestion?.ident,
+	        'user_answer': guess
         }
         webSocket?.send(createMessage('answered_question', data));
     }
 
     return (
          <div className="box">
-
                 <div>
-                    <h1 className="main-title">{questions.title ? questions.title : 'title'}</h1>
+                    <h1 className="main-title">{singleQuestion?.title}</h1>
                 </div>
                 <div>
                     <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
@@ -160,25 +173,36 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
                     </h4>
                     <br />
                     <h4 style={{color: '#FFC0CB'}}>
-                        Difficulty: {questions.difficulty ? questions.difficulty : 'difficulty'}
+                        Difficulty: {singleQuestion?.difficulty}
                     </h4>
                     <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
-                        Votes: {questions.votes ? questions.votes : 'votes'}
+                        Votes: {singleQuestion?.votes}
                     </h4>
                 </div>
                 <div className="code-snippet">
-                    <MyCoolCodeBlock code={questions.txt ? questions.txt : ''} language={"python"}/>
+                    <MyCoolCodeBlock code={singleQuestion?.txt} language={"python"}/>
                 </div>
                 <div style={{display: !getExplanation && "none"}}>
-                    <button>Next question</button>
+                    <button onClick={(e) => handleNextQuestions(e)}>Next question</button>
                 </div>
-                <div style={{display: getExplanation? "none": "flex"}} className="buttons">
-                    <button className="bb-button bug" onClick={(e) => handleGuess(e, 'bug')}>
-                        Bug
-                    </button>
-                    <button className="bb-button feature" onClick={(e) => handleGuess(e, 'feature')}>
-                        Feature
-                    </button>
+                <div style={
+                    {
+                        display: getExplanation? "none": "flex",
+                        justifyContent:
+                            singleQuestion?.title.toLowerCase().includes('you have answered all questions')
+                                ? "center": ""
+                    }
+                } className="buttons">
+                    <div style={
+                        {display: singleQuestion?.title.toLowerCase().includes('you have answered all questions') ? "none": "flex"}
+                    }>
+                        <button className="bb-button bug" onClick={(e) => handleGuess(e, 'bug')}>
+                            Bug
+                        </button>
+                        <button className="bb-button feature" onClick={(e) => handleGuess(e, 'feature')}>
+                            Feature
+                        </button>
+                    </div>
                     <Link to="/">
                         <button className="bb-button upload">
                             Upload my own question!
@@ -240,12 +264,12 @@ function App() {
                     break;
                 case 'serve_question':
                     console.log(debugMessage(type, data));
-                    setQuestions(data);
-		    setExplanation('');
+                    setQuestions([data, ...questions]);
+		            setExplanation('');
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
-		    setExplanation(data)
+		            setExplanation(data)
                     break;
                 default:
                     console.log(debugMessage(type, data));
