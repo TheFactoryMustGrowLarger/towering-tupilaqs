@@ -296,9 +296,10 @@ def update_user_ca_by_uuid(uuid: str, ca: str) -> bool:
     :param ca:
     :return:
     """
+    logger.debug('Adding to correct answer list for user %s: %s', uuid, ca)
+
     # Add delimiter
     ca = ', ' + ca  # HACK: Better to skip this if correct_answers is empty
-
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -317,16 +318,17 @@ def update_user_ca_by_uuid(uuid: str, ca: str) -> bool:
             return True
 
 
-def update_user_ia_by_uuid(uuid: str, ca: str) -> bool:
+def update_user_ia_by_uuid(uuid: str, ia: str) -> bool:
     """**Update users `incorrect_answers` with their `user_name`**...
 
     :param uuid:
-    :param ca:
+    :param ia:
     :return:
     """
-    # Add delimiter
-    ca = ', ' + ca  # HACK: Better to skip this if correct_answers is empty
+    logger.debug('Adding to incorrect answer list for user %s: %s', uuid, ia)
 
+    # Add delimiter
+    ia = ', ' + ia  # HACK: Better to skip this if correct_answers is empty
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -334,11 +336,11 @@ def update_user_ia_by_uuid(uuid: str, ca: str) -> bool:
                 UPDATE
                     users
                 SET
-                    incorrect_answers = CONCAT(incorrect_answers, %(ca)s::text)
+                    incorrect_answers = CONCAT(incorrect_answers, %(ia)s::text)
                 WHERE
                     ident = %(uuid)s
             """, {
-                    'ca': ca,
+                    'ia': ia,
                     'uuid': uuid,
                 }
             )
@@ -768,7 +770,7 @@ if __name__ == '__main__':
     start = number_of_correct_questions
     end = number_of_correct_questions+number_of_incorrect_questions
     for q in questions[start:end]:
-        update_user_ia_by_uuid(user_id, ca=q.ident)
+        update_user_ia_by_uuid(user_id, ia=q.ident)
 
     correct_answers = get_ca_by_uuid(user_id)
     incorrect_answers = get_ia_by_uuid(user_id)

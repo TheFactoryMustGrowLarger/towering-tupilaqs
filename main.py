@@ -75,7 +75,12 @@ def process_serve_new_question(event) -> dict:
         result = db.api.get_new_question_for_user(user_uuid)
         result = result.__dict__
     except IndexError:
-        result = {'txt': 'You have answered all questions, add more to the database!'}
+        default = 'You have answered all questions, add more to the database!'
+        result = {'txt': default,
+                  'title': default,
+                  'expl': default,
+                  'votes': 0,
+                  'ident': 'INVALID'}
 
     logger.info('serving new question %s', result)
     return result
@@ -94,12 +99,12 @@ def process_new_answer(event) -> str:
     correct_answer = question.answer
     if user_answer.lower() == correct_answer.lower():
         ret = 'Correct!'
+        db.api.update_user_ca_by_uuid(user_uuid, ca=question.ident)
     else:
         ret = 'Sorry, this was a "%s".' % correct_answer
+        db.api.update_user_ia_by_uuid(user_uuid, ia=question.ident)
 
     ret += '\n%s' % question.expl
-
-    # FIXME: update user, with both correct and incorrect answers
 
     logger.debug('process_new_answer(%s, %s, """%s""") -> %s' % (user_uuid, user_answer, question.txt, ret))
     return ret
