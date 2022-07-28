@@ -65,7 +65,7 @@ def insert_question(
         expl: str,
         diff: int = 0,
         votes: int = 0
-) -> str:
+) -> Question:
     """**Insert a record database.**
 
     :param question:
@@ -78,6 +78,14 @@ def insert_question(
     # FIXME: Can this updated to check for duplicate question text?
     # Not sure if it should be rejected or allowed to update.
     unique_id = uuid1()
+    question = Question(txt=question,
+                        title=title,
+                        expl=expl,
+                        difficulty=diff,
+                        votes=votes,
+                        id=unique_id,
+                        ident=unique_id)
+
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -85,15 +93,8 @@ def insert_question(
                 INSERT INTO
                     questions (TXT, TITLE, EXPL, DIFFICULTY, VOTES, IDENT)
                 VALUES
-                    ( %(question)s, %(title)s, %(expl)s, %(diff)s, %(votes)s, %(ident)s )
-            """, {
-                    'question': question,
-                    'title': title,
-                    'expl': expl,
-                    'diff': diff,
-                    'votes': votes,
-                    'ident': unique_id,
-                }
+                    ( %(txt)s, %(title)s, %(expl)s, %(difficulty)s, %(votes)s, %(id)s )
+            """, question.__dict__
             )
             cur.execute(
                 """
@@ -106,7 +107,7 @@ def insert_question(
                     'ident': unique_id,
                 }
             )
-            return f"Added `{title}` to the database with UUID {unique_id}."
+            return question
 
 
 def delete_question(uuid: str) -> tuple:
