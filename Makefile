@@ -21,3 +21,12 @@ install_remote:
 
 install_docker:
 	cp db/db_config/database_docker.ini db/db_config/database.ini
+
+docker_up:
+	sudo docker-compose up
+
+docker_up_build:
+	sudo docker-compose up --build
+
+docker_cleanup_all:
+	sudo docker system prune -a --volumes
