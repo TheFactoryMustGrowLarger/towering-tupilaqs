@@ -10,11 +10,13 @@ import React, {useEffect, useRef, useState} from 'react';
  * - 'get_question'
  * - 'answered_question'
  * - 'insert_new_question'
+ * - 'get_question'
  * - TODO: Needs to be implemented more
  *  - 'token_pls' - gets token for security
- * @param {string} type
+ * @param {String} type
  * @param {Object} data
- * @returns {string}
+ *
+ * @returns {String}
  */
 const createMessage = (type, data) => {
 
@@ -23,15 +25,26 @@ const createMessage = (type, data) => {
 
 /**
  * @description Makes debug messages
- * @param {string} type
+ * @param {String} type
  * @param {Object} data
- * @returns {`${string} <> tupilaqs <> DEBUG <> ${string} - ${string}`}
+ *
+ * @returns {`${String} <> tupilaqs <> DEBUG <> ${String} - ${String}`}
  */
 const debugMessage = (type, data) => {
     const date = new Date().toUTCString();
     return `${date} <> tupilaqs <> DEBUG <> ${type} - ${JSON.stringify(data)}`;
 }
 
+/**
+ * @description CHANGE ME
+ *
+ * @param {WebSocket} webSocket
+ * @param {Function} setUserName
+ * @param {String} userName
+ *
+ * @returns {JSX.Element}
+ * @constructor
+ */
 const LandingPage = ({ webSocket, setUserName, userName}) => {
     const [error, setError] = useState("")
 
@@ -112,8 +125,19 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
     )
 }
 
-//FIXME: Did not work: function CodeBox({ getQuestion }) {
-const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExplanation, getExplanation}) => {
+/**
+ * @description CHANGE ME
+ *
+ * @param {WebSocket} webSocket
+ * @param {String} userName
+ * @param {String} wsMessage
+ * @param {Array} questions
+ * @param {Function} getExplanation
+ *
+ * @returns {JSX.Element}
+ * @constructor
+ */
+const Box = ({ webSocket, userName, questions, getExplanation}) => {
     const [isStarted, setStarted] = useState(false);
     const singleQuestion = questions[0] ? questions[0] : {
         'txt': 'placeholder',
@@ -121,6 +145,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
         'expl': 'placeholder expl',
         'difficulty': 0,
         'votes': 0,
+        'ident': 'placeholder ident',
     };
     const handleNextQuestions = () => {
 
@@ -139,9 +164,6 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
      * For starting game, should probably be expanded upon.
      */
     const startGame = () => {
-        const data = {
-            'user_name': userName
-        }
         handleNextQuestions();
         setStarted(true);
     }
@@ -194,7 +216,10 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
                     }
                 } className="buttons">
                     <div style={
-                        {display: singleQuestion?.title.toLowerCase().includes('you have answered all questions') ? "none": "flex"}
+                        {
+                            display: singleQuestion?.title.toLowerCase().includes('you have answered all questions')
+                                ? "none": "flex"
+                        }
                     }>
                         <button className="bb-button bug" onClick={(e) => handleGuess(e, 'bug')}>
                             Bug
@@ -214,6 +239,15 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
     )
 }
 
+/**
+ * @description CHANGE ME
+ *
+ * @param code
+ * @param language
+ * @returns {JSX.Element}
+ *
+ * @constructor
+ */
 function MyCoolCodeBlock({ code, language }) {
   return (<CodeBlock
 	      text={code}
