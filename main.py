@@ -162,9 +162,11 @@ def process_new_question(event) -> str:
     question = db.api.insert_question(**database_insert)
 
     # add question uuid to User, so we know who submitted it and can calculate score based on good questions
-    db.api.update_user_sq_by_uuid(user_uuid, sq=question.ident)
+    db.api.update_user_sq_by_uuid(user_uuid, sq=str(question.ident))
 
-    return question
+    ret = "Added `{title}` to the database with UUID {unique_id}.".format(title=question.title,
+                                                                          unique_id=question.ident)
+    return ret
 
 
 def process_serve_new_question(user, event):
