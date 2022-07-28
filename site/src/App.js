@@ -148,7 +148,6 @@ const Box = ({ webSocket, userName, questions, getExplanation}) => {
         'ident': 'placeholder ident',
     };
     const handleNextQuestions = () => {
-
         const data = {
             'user_name': userName,
         }
@@ -184,6 +183,24 @@ const Box = ({ webSocket, userName, questions, getExplanation}) => {
         webSocket?.send(createMessage('answered_question', data));
     }
 
+    const handleVote = (e, vote) => {
+        e.preventDefault();
+
+        const data = {
+            'question_uuid': singleQuestion?.ident,
+            'vote': vote,
+        }
+        // TODO:
+        //  Would be nice to dynamically change the votes on the page
+        //  to represent whats in the database.
+        //  just cant figure out how to rerender the page
+        //  I know its because singleQuestion isnt updating the useState hook
+        //  Just dont know how to fix that.
+        // if (vote === 'add') singleQuestion.votes = singleQuestion.votes + 1;
+        // if (vote === 'sub') singleQuestion.votes = singleQuestion.votes - 1;
+        webSocket?.send(createMessage('vote_question', data));
+    }
+
     return (
          <div className="box">
                 <div>
@@ -200,6 +217,14 @@ const Box = ({ webSocket, userName, questions, getExplanation}) => {
                     <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
                         Votes: {singleQuestion?.votes}
                     </h4>
+                    <span>
+                        <button onClick={(e) => handleVote(e, 'add')}>
+                            Updoot
+                        </button>
+                        <button onClick={(e) => handleVote(e, 'sub')}>
+                            Downdoot
+                        </button>
+                    </span>
                 </div>
                 <div className="code-snippet">
                     <MyCoolCodeBlock code={singleQuestion?.txt} language={"python"}/>
@@ -298,12 +323,15 @@ function App() {
                     break;
                 case 'serve_question':
                     console.log(debugMessage(type, data));
-                    setQuestions([data, ...questions]);
+                    setQuestions(oldArray => [...oldArray, data]);
 		            setExplanation('');
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
 		            setExplanation(data)
+                    break;
+                case 'vote_feedback':
+                    console.log(debugMessage(type, data));
                     break;
                 default:
                     console.log(debugMessage(type, data));

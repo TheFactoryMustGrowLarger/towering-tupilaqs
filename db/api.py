@@ -239,15 +239,24 @@ def update_question_difficulty(uuid: str, diff: int) -> bool:
             return True
 
 
-def update_question_votes(uuid: str, votes: int) -> bool:
+def update_question_votes(uuid: str, votes: str = 'add') -> dict:
     """**Update QUESTION `VOTES`.**
 
     :param uuid: Needs to be in string format for comparison
-    :param votes:
+    :param votes: Either 'add' or 'sub' / Add or Subtract
     :return:
     """
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
+            current_votes = get_single_question(uuid).votes
+            new_votes = 0
+            if votes == 'add':
+                new_votes = current_votes + 1
+            elif votes == 'sub' and current_votes > 0:
+                new_votes = current_votes - 1
+            else:
+                new_votes = current_votes
+
             cur.execute(
                 """
                 UPDATE
@@ -257,11 +266,11 @@ def update_question_votes(uuid: str, votes: int) -> bool:
                 WHERE
                     ident = %(ident)s
             """, {
-                    'votes': votes,
+                    'votes': new_votes,
                     'ident': uuid,
                 }
             )
-            return True
+            return {'ident': uuid, 'votes': new_votes}
 
 
 def update_answer_text(uuid: str, text: str) -> bool:
@@ -738,19 +747,22 @@ def get_user_by_name(user_name: str) -> User:
 
 if __name__ == '__main__':
     from utilites.logger_utility import setup_logger
+
     setup_logger()
 
     initiate_database()
 
     for i in range(1, 20):
-        print(insert_question(
-            question=f"question{i}",
-            answer=f"answer{i}",
-            title=f"title{i}",
-            expl=f"expl{i}",
-            votes=random.randrange(1, 100),
-            diff=random.randrange(1, 5)
-        ))
+        print(
+            insert_question(
+                question=f"question{i}",
+                answer=f"answer{i}",
+                title=f"title{i}",
+                expl=f"expl{i}",
+                votes=random.randrange(1, 100),
+                diff=random.randrange(1, 5)
+            )
+        )
         print(add_user(user_name=f"username{i}"))
 
     print(get_single_question_by_votes())
@@ -768,7 +780,7 @@ if __name__ == '__main__':
         update_user_ca_by_uuid(user_id, ca=q.ident)
 
     start = number_of_correct_questions
-    end = number_of_correct_questions+number_of_incorrect_questions
+    end = number_of_correct_questions + number_of_incorrect_questions
     for q in questions[start:end]:
         update_user_ia_by_uuid(user_id, ia=q.ident)
 

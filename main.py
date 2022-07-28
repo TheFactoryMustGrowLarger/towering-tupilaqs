@@ -159,6 +159,14 @@ async def websocket_echo(
                     'data': ret
                 }
             )
+        elif event_type == 'vote_question':
+            ret = db.api.update_question_votes(event['data']['question_uuid'], event['data']['vote'])
+            await websocket.send_json(
+                {
+                    'type': 'vote_feedback',
+                    'data': ret
+                }
+            )
         else:
             logger.error('Unknown event type %s', event_type)
 
