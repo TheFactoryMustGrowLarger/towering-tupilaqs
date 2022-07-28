@@ -125,7 +125,6 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
      * For starting game, should probably be expanded upon.
      */
     const startGame = () => {
-        setExplanation(false)
         const data = {
             'user_name': userName
         }
@@ -139,7 +138,6 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
      * @param {string} guess
      */
     const handleGuess = (e, guess) => {
-        setExplanation(true)
         e.preventDefault();
 
         const data = {
@@ -158,7 +156,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
                 </div>
                 <div>
                     <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
-                        {getExplanation && questions.expl}
+                        {getExplanation}
                     </h4>
                     <br />
                     <h4 style={{color: '#FFC0CB'}}>
@@ -215,7 +213,7 @@ function App() {
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
-    const [getExplanation, setExplanation] = useState(false)
+    const [getExplanation, setExplanation] = useState('')
     // Only runs when connection is open and closed.
     useEffect(() => {
         ws.current = new WebSocket(socketURL.current);
@@ -243,6 +241,11 @@ function App() {
                 case 'serve_question':
                     console.log(debugMessage(type, data));
                     setQuestions(data);
+		    setExplanation('');
+                    break;
+                case 'answered_question_feedback':
+                    console.log(debugMessage(type, data));
+		    setExplanation(data)
                     break;
                 default:
                     console.log(debugMessage(type, data));
