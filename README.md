@@ -70,11 +70,11 @@ To configure the database, copy either
 
 to db/db_config/database.ini.
 
-e.g. Windows:
+e.g. on Windows:
 ```
 xcopy /f /y db/db_config/database_remote.ini db/db_config/database.ini
 ```
-Linux:
+or Linux:
 ```
 cp db/db_config/database_remote.ini db/db_config/database.ini
 ```
@@ -110,7 +110,7 @@ npm start
 ```
 
 ### Manual install - Run
-To serve the initial webpage and python websocket, use
+To serve the python websocket, use
 ```
 poetry run uvicorn main:app --reload
 ```
