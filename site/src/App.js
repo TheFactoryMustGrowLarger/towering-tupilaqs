@@ -34,68 +34,88 @@ const debugMessage = (type, data) => {
 
 const LandingPage = ({ webSocket, setUserName, userName}) => {
     const [error, setError] = useState("")
+
+    const [NewQuestionText, SetNewQuestionText] = useState("")
+    const [CorrectAnswer, SetCorrectAnswer] = useState("")
+    const [NewQuestionTitle, SetNewQuestionTitle] = useState("")
+    const [NewQuestionExplanation, SetNewQuestionExplanation] = useState("")
+
     const add_new_question = (e) => {
         e.preventDefault();
         if (userName) {
-               const itemId = document.getElementById("itemID").value;
-               const new_question_text = document.getElementById("newQuestionText").value;
-               const correct_answer = document.getElementById("correctAnswer").value;
-               const new_question_title = document.getElementById("newQuestionTitle").value;
-               const new_question_explanation = document.getElementById("newQuestionExplanation").value;
+            CheckQuestionField()
 
-                const request = {
-                    user: itemId,
-                    question: new_question_text,
-                    correct_answer: correct_answer,
-                    new_question_title: new_question_title,
-                    new_question_explanation: new_question_explanation,
-                };
-
-
-                webSocket.send(createMessage('insert_new_question', request))
         } else {
-            setError("The user name field must be filled in")
+            setError("The user name field must be filled in!")
         }
 
         clearAddQ();
     }
 
     const clearAddQ = () => {
-        document.getElementById("newQuestionText").value = "";
-        document.getElementById("correctAnswer").value = "";
-        document.getElementById("newQuestionTitle").value = "";
-        document.getElementById("newQuestionExplanation").value = "";
+        SetNewQuestionText("")
+        SetNewQuestionTitle("")
+        SetCorrectAnswer("")
+        SetNewQuestionExplanation("")
     }
 
+    const CheckUsernameField = () => {
+        if(userName === ""){
+            setError("The username field must be filled in!")
+        }
+
+    }
+    const CheckQuestionField = () => {
+        if(NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== ""){
+                const request = {
+                    user: userName,
+                    question: NewQuestionText,
+                    correct_answer: CorrectAnswer,
+                    new_question_title: NewQuestionTitle,
+                    new_question_explanation: NewQuestionExplanation,
+
+                };
+          webSocket.send(createMessage('insert_new_question', request))
+        }
+        else{
+            setError("The Questions field must be filled in!")
+        }
+    }
     return (
         <div>
             <div className="inputs registration">
                 <input type="text" value={userName} onChange={e => setUserName(e.target.value)} className="input-base" id="itemID" placeholder="Username: "/>
-                 <p className="error">{error}</p>
-            </div>
-            <Link to={userName ? "/categories" : ""}><button className="bb-button start-button">New Game</button></Link>
-            <h1 className="main-title center">Add custom questions </h1>
-            <div className="inputs">
-                <input type="text" className="input-base" id="newQuestionText" placeholder="New Question: "/>
-                <input type="text" className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
-                <input type="text" className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
-                <input type="text" className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
-                <button className="bb-button small-height" onClick={(e) => add_new_question(e)}>Send</button>
 
             </div>
+            <Link to={userName ? "/categories" : ""}><button onClick={CheckUsernameField} className="bb-button start-button">New Game</button></Link>
+            <h1 className="main-title center">Add custom questions </h1>
+            <div className="inputs">
+                <input type="text" value={NewQuestionText} onChange={e => SetNewQuestionText(e.target.value)} className="input-base" id="newQuestionText" placeholder="New Question: "/>
+                <input type="text" value={CorrectAnswer} onChange={e => SetCorrectAnswer((e.target.value))} className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
+                <input type="text" value={NewQuestionTitle} onChange={e => SetNewQuestionTitle((e.target.value))} className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
+                <input type="text" value={NewQuestionExplanation} onChange={e => SetNewQuestionExplanation((e.target.value))} className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
+                <button className="bb-button small-height"  onClick={(e) => add_new_question(e)}>Send</button>
+
+            </div>
+
             <div className="debug">
                 <ul id='messages'>
                     <h2 className="main-title center">Current token from Server: {}</h2>
                 </ul>
             </div>
+            <div className="errors">
+               <p >{error}</p>
+            </div>
+
         </div>
     )
 }
 
 //FIXME: Did not work: function CodeBox({ getQuestion }) {
-const Box = ({ webSocket, userName, wsMessage, questions, setQuestions }) => {
+const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExplanation, getExplanation}) => {
     const [isStarted, setStarted] = useState(false);
-
+    console.log(questions.expl)
+    console.log(getExplanation)
     useEffect(() => {
         if (isStarted) return;
         startGame();
@@ -105,6 +125,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions }) => {
      * For starting game, should probably be expanded upon.
      */
     const startGame = () => {
+        setExplanation(false)
         const data = {
             'user_name': userName
         }
@@ -118,6 +139,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions }) => {
      * @param {string} guess
      */
     const handleGuess = (e, guess) => {
+        setExplanation(true)
         e.preventDefault();
         if (!questions.answer) return;
 
@@ -138,7 +160,7 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions }) => {
                 </div>
                 <div>
                     <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
-                        {questions.expl ? questions.expl : 'explanation'}
+                        {getExplanation && questions.expl}
                     </h4>
                     <br />
                     <h4 style={{color: '#FFC0CB'}}>
@@ -151,7 +173,10 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions }) => {
                 <div className="code-snippet">
                     <MyCoolCodeBlock code={questions.txt ? questions.txt : ''} language={"python"}/>
                 </div>
-                <div className="buttons">
+                <div style={{display: !getExplanation && "none"}}>
+                    <button>Next question</button>
+                </div>
+                <div style={{display: getExplanation? "none": "flex"}} className="buttons">
                     <button className="bb-button bug" onClick={(e) => handleGuess(e, 'bug')}>
                         Bug
                     </button>
@@ -192,7 +217,7 @@ function App() {
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
-
+    const [getExplanation, setExplanation] = useState(false)
     // Only runs when connection is open and closed.
     useEffect(() => {
         ws.current = new WebSocket(socketURL.current);
@@ -238,6 +263,8 @@ function App() {
         wsMessage: wsMessage,
         questions: questions,
         setQuestions: setQuestions,
+        getExplanation: getExplanation,
+        setExplanation: setExplanation
     }
 
     return (
