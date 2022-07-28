@@ -141,15 +141,13 @@ const Box = ({ webSocket, userName, wsMessage, questions, setQuestions, setExpla
     const handleGuess = (e, guess) => {
         setExplanation(true)
         e.preventDefault();
-        if (!questions.answer) return;
 
-        if (questions.answer.toString().toLowerCase() === guess) {
-            console.log("You got it correct!!");
-            // Now it needs to get a new question, answer
-            // Add it to the users correct_answers in DB
-        } else {
-            console.log("THAT'S WRONG YOU NERD, HA!");
+        const data = {
+            'user_name': userName,
+	    'question_uuid': questions.ident,
+	    'user_answer': guess
         }
+        webSocket?.send(createMessage('answered_question', data));
     }
 
     return (

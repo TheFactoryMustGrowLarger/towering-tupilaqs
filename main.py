@@ -1,5 +1,4 @@
 import json
-import random
 import secrets
 from typing import Union
 
@@ -68,19 +67,42 @@ def process_new_question(event) -> str:
     return db.api.insert_question(**database_insert)
 
 
-def process_serve_new_question(event) -> list:
-    """Takes in a json event (content ignored for now) and requests a new question from the database"""
-    # FIXME: avoid showing the same question twice
+def process_serve_new_question(event) -> dict:
+    """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
     user_uuid = get_or_create_user(event['user_name'])
-    result = db.api.get_ca_by_uuid(user_uuid)
-    if len(result) > 0:
-        return [i.__dict__ for i in result]
 
-    result = db.api.get_all_questions()
-    if len(result) > 0:
-        return [i.__dict__ for i in result]
+    try:
+        result = db.api.get_new_question_for_user(user_uuid)
+        result = result.__dict__
+    except IndexError:
+        result = {'txt': 'You have answered all questions, add more to the database!'}
 
-    return []
+    logger.info('serving new question %s', result)
+    return result
+
+
+def process_new_answer(event) -> str:
+    """Takes in a json event with a user answer and sends to database"""
+    user_uuid = get_or_create_user(event['user_name'])
+    question_uuid = event['question_uuid']
+    user_answer = event['user_answer']
+
+    question = db.api.get_single_question(question_uuid)
+    if question is None:
+        raise Exception('Bug, could not find question corresponding to %s' % question_uuid)
+
+    correct_answer = question.answer
+    if user_answer.lower() == correct_answer.lower():
+        ret = 'Correct!'
+    else:
+        ret = 'Sorry, this was a "%s".' % correct_answer
+
+    ret += '\n%s' % question.expl
+
+    # FIXME: update user, with both correct and incorrect answers
+
+    logger.debug('process_new_answer(%s, %s, """%s""") -> %s' % (user_uuid, user_answer, question.txt, ret))
+    return ret
 
 
 @app.websocket("/quiz")
@@ -90,10 +112,16 @@ async def websocket_echo(
     """Handle all the shizz"""
     await websocket.accept()
     while True:
-        data = await websocket.receive_text()
+        try:
+            data = await websocket.receive_text()
+        except Exception as e:
+            logger.info('receive_text failed %s', e)
+            break
+
         logger.debug('quiz-received-data: %s', data)
         event = json.loads(data)
-        if event['type'] == 'token_pls':
+        event_type = event['type']
+        if event_type == 'token_pls':
             await websocket.send_json(
                 {
                     'type': 'auth',
@@ -102,7 +130,7 @@ async def websocket_echo(
                     }
                 }
             )
-        elif event['type'] == 'insert_new_question':
+        elif event_type == 'insert_new_question':
             a = process_new_question(event=event['data'])
             await websocket.send_json(
                 {
@@ -110,19 +138,24 @@ async def websocket_echo(
                     'data': a
                 }
             )
-        elif event['type'] == 'get_question':
+        elif event_type == 'get_question':
             ret = process_serve_new_question(event['data'])
-            # Only serving ONE question out of the 10 limit for testing purpose
-            # Should be changed down the line?
             await websocket.send_json(
                 {
                     'type': 'serve_question',
-                    'data': ret[random.randrange(0, len(ret))]
+                    'data': ret
                 }
             )
-        elif event['type'] == 'answered_question':
-            # TODO:
-            pass
+        elif event_type == 'answered_question':
+            ret = process_new_answer(event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'answered_question_feedback',
+                    'data': ret
+                }
+            )
+        else:
+            logger.error('Unknown event type %s', event_type)
 
 
 async def get_cookie_or_token(

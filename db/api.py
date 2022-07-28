@@ -551,8 +551,10 @@ def get_new_question_for_user(uuid: str) -> list[Question]:
         cur.close()
 
         answers = list()
-        answers.extend(user_ca.correct_answers.split(', '))  # Split correct answers from STR into a tuple
-        answers.extend(user_ca.incorrect_answers.split(', '))  # Split correct answers from STR into a tuple
+        if user_ca.correct_answers is not None:
+            answers.extend(user_ca.correct_answers.split(', '))  # Split correct answers from STR into a tuple
+        if user_ca.incorrect_answers is not None:
+            answers.extend(user_ca.incorrect_answers.split(', '))  # Split correct answers from STR into a tuple
 
         answers = list(filter(lambda x: x != '', answers))  # remove empty items
 
