@@ -12,3 +12,21 @@ install:
 	(cd site;npm install)
 	poetry install
 	poetry run pre-commit install
+
+install_local:
+	cp db/db_config/database_local.ini db/db_config/database.ini
+
+install_remote:
+	cp db/db_config/database_remote.ini db/db_config/database.ini
+
+install_docker:
+	cp db/db_config/database_docker.ini db/db_config/database.ini
+
+docker_up:
+	sudo docker-compose up
+
+docker_up_build:
+	sudo docker-compose up --build
+
+docker_cleanup_all:
+	sudo docker system prune -a --volumes

@@ -8,7 +8,7 @@ from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
 
 # This project
-from db.utils.config import config
+from db.db_config.config import config
 from db.utils.db_classes import Combined, Question, User, UserCA, UserIA
 from db.utils.db_tables import (
     create_questions_table, create_users_table, creater_answers_table
@@ -19,10 +19,14 @@ logger = logging.getLogger('tupilaqs.db')
 
 def __conn_singleton() -> Connection:
     conn = ""
+    conf = config()
     try:
-        conn = connect(**config(section='local'))
+        conn = connect(**conf)
     except errors.ConnectionDoesNotExist as e:
         print(e)
+    except errors.OperationalError as e:
+        logger.exception('db connect failed %s', conf)
+        raise e
     return conn
 
 
