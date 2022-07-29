@@ -49,6 +49,7 @@ class User:
     user_name: str
     correct_answers: str
     incorrect_answers: str
+    submitted_questions: str
     ident: str
 
 
@@ -64,3 +65,10 @@ class UserIA:
     """User incorrect answers Type Struct"""
 
     incorrect_answers: str
+
+
+@dataclass
+class UserSQ:
+    """User incorrect answers Type Struct"""
+
+    submitted_questions: str

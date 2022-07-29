@@ -5,8 +5,7 @@
 - basic password check to avoid two people using the same username
 - Support difficulty
 - Support voting up good questions
-- User database needs to keep track of:
-- - Entered questions uuid, to be able to calculate a score for submiting good questions
+- Support showing score (upvotes) for current user submitted questions
 
 # Tower Tupilaqs
 ![Tupilaqs in Paris](images/tower-tupilaqs-paris.jpg)
