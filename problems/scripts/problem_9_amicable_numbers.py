@@ -1,5 +1,5 @@
 def are_amicable(a, b):
-    """This function return True if a and b are amicable and False if they're not amicable.
+    """This function returns True if a and b are amicable and False if they're not amicable.
 
     Two numbers are amicable if each is equal to the sum of the proper divisors of the other.
     Example:
