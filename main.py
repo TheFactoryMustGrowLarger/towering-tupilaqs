@@ -34,15 +34,16 @@ for script, answer, title, explanation, difficulty in problems_keywords:
                      e, script, answer, title, explanation, difficulty)
 
 
-def get_or_create_user(user):
+def get_or_create_user(user: str, password: str) -> str:
     """Returns user uuid, if the user does not exist, it will be created"""
     u = db.api.get_user_by_name(user)
     if u is not None:
-        user_uuid = u.ident
+        if db.api.check_password(user, password):
+            return u.ident
+        else:
+            return "wrong password"
     else:
-        user_uuid = db.api.add_user(user)  # FIXME: password?
-
-    return user_uuid
+        return db.api.add_user(user, password)
 
 
 def process_new_question(event) -> str:
