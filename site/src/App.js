@@ -144,28 +144,35 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
  * @returns {JSX.Element}
  * @constructor
  */
-const Box = ({ webSocket, userName, singleQuestion, setSQuestion, getExplanation }) => {
-    const [isStarted, setStarted] = useState(false);
+const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, getExplanation }) => {
+
     const handleNextQuestions = () => {
-        const data = {
-            'user_name': userName,
+        if (userName.length > 0) {
+            const data = {
+                'user_name': userName,
+            }
+            localStorage.setItem('username', userName);
+            webSocket?.send(createMessage('get_question', data));
+        } else {
+            // use localstorage
+            const data = {
+                'user_name': localStorage.getItem('username'),
+            }
+            webSocket?.send(createMessage('get_question', data));
         }
-        webSocket?.send(createMessage('get_question', data));
     }
 
     useEffect(() => {
-        if (isStarted) return;
-        if (singleQuestion?.title === 'placeholder title') return;
-        startGame();
-    }, [singleQuestion]);
+        if (webSocket === null) return;
 
-    /**
-     * For starting game, should probably be expanded upon.
-     */
-    const startGame = () => {
-        handleNextQuestions();
-        setStarted(true);
-    }
+
+        if (webSocket.readyState === 1 && (userName !== '' || userName !== undefined)) {
+            console.log("startgame will be ran");
+            handleNextQuestions();
+        }
+    }, [webSocket?.readyState]);
+
+
 
     /**
      * @description Sends the guess of the player to backend to verify.
@@ -207,11 +214,17 @@ const Box = ({ webSocket, userName, singleQuestion, setSQuestion, getExplanation
     }
 
     return (
-         <div className="box">
+        <>
+        {singleQuestion.title ?
+        <div className="box">
             <div>
                 <h1 className="main-title">{singleQuestion?.title}</h1>
             </div>
-            <div>
+            <div style={
+                {
+                    display: singleQuestion?.title.toLowerCase().includes('you have answered all questions')
+                            ? "none": ""
+                }}>
                 <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
                     {getExplanation}
                 </h4>
@@ -264,7 +277,8 @@ const Box = ({ webSocket, userName, singleQuestion, setSQuestion, getExplanation
                     </button>
                 </Link>
             </div>
-        </div>
+        </div> : <div className="box">Loading...</div>}
+        </>
 
     )
 }
