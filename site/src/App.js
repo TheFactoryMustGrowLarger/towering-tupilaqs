@@ -119,7 +119,7 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
                 </ul>
             </div>
             <div className="errors">
-               <p >{error}</p>
+                <p>{error}</p>
             </div>
 
         </div>
@@ -165,10 +165,8 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
 
     useEffect(() => {
         if (webSocket === null) return;
-
-
         if (webSocket.readyState === 1 && (userName !== '' || userName !== undefined)) {
-            console.log("startgame will be ran");
+            setError('');
             handleNextQuestions();
         }
     }, [webSocket?.readyState]);
@@ -205,7 +203,7 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
 
     return (
         <>
-        {singleQuestion.title ?
+        {singleQuestion.title && !error ?
         <div className="box">
             <div>
                 <h1 className="main-title">{singleQuestion?.title}</h1>
@@ -264,7 +262,16 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
                     </button>
                 </Link>
             </div>
-        </div> : <div className="box">Loading...</div>}
+        </div> :
+        <>
+            <div className="box">
+                Loading...
+            </div>
+            <div className="alert">
+                <span className="closebtn">&times;</span>
+                {error}
+            </div>
+        </>}
         </>
 
     )
@@ -294,6 +301,7 @@ function App() {
     const socketURL = useRef('ws://localhost:8000/quiz');
     const ws = useRef(null);
     const [token, setToken] = useState('');
+    const [error, setError] = useState('');
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
@@ -327,6 +335,11 @@ function App() {
                     break;
                 case 'serve_question':
                     console.log(debugMessage(type, JSON.parse(data)));
+                    const d = JSON.parse(data);
+                    if (Object.keys(d).includes('error')) {
+                        setError(d.error);
+                        break;
+                    }
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
 		    setExplanation('');
@@ -361,6 +374,8 @@ function App() {
         setExplanation: setExplanation,
         singleQuestion: singleQuestion,
         setSQuestion: setSQuestion,
+        error: error,
+        setError: setError,
     }
 
     return (
