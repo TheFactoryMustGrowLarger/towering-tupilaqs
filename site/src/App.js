@@ -62,7 +62,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
         } else {
             setError("The user name and password field needs to be filled in!");
         }
-
         clearAddQ();
     }
 
@@ -81,10 +80,9 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
         } else if (userName && userPassword === '') {
             setError("Password field needs to be filled in!");
         }
-
     }
     const CheckQuestionField = () => {
-        if(NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== ""){
+        if (NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== "") {
                 const request = {
                     user: userName,
                     password: sha256(userPassword),
@@ -92,7 +90,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
                     correct_answer: CorrectAnswer,
                     new_question_title: NewQuestionTitle,
                     new_question_explanation: NewQuestionExplanation,
-
                 };
           webSocket.send(createMessage('insert_new_question', request));
         } else {
@@ -383,7 +380,7 @@ function App() {
         questions: questions,
         setQuestions: setQuestions,
         getExplanation: getExplanation,
-	getVotes: getVotes,
+	    getVotes: getVotes,
         setExplanation: setExplanation,
         singleQuestion: singleQuestion,
         setSQuestion: setSQuestion,
