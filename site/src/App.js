@@ -1,6 +1,7 @@
 import "./style/main.scss";
 import {CodeBlock, dracula} from "react-code-blocks";
-import {BrowserRouter, Link, Route, Routes} from "react-router-dom"
+import {BrowserRouter, Link, Route, Routes} from "react-router-dom";
+import sha256 from 'crypto-js/sha256';
 
 import React, {useEffect, useRef, useState} from 'react';
 
