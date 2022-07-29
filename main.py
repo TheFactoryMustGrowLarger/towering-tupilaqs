@@ -121,10 +121,11 @@ def process_vote_question(event) -> str:
 
     :returns: a dictonary with question_id and current vote.
     """
+    user_uuid = get_or_create_user(event['user_name'])
     question_id = event['question_uuid']
     vote = event['vote']
 
-    ret = db.api.update_question_votes(question_id, vote)
+    ret = db.api.update_question_votes(question_id, user_uuid, vote)
 
     logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, ret))
     return ret

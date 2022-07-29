@@ -41,19 +41,6 @@ class Combined:
     ident: str
 
 
-@dataclass
-class User:
-    """User Type struct"""
-
-    id: int
-    user_name: str
-    correct_answers: str
-    incorrect_answers: str
-    submitted_questions: str
-    submitted_add_votes: str
-    ident: str
-
-
 class UserList:
     """Base class for the different lists that the User table contains"""
 
@@ -72,6 +59,19 @@ class UserList:
 
 
 @dataclass
+class User(UserList):
+    """User Type struct"""
+
+    id: int
+    user_name: str
+    correct_answers: str
+    incorrect_answers: str
+    submitted_questions: str
+    submitted_add_votes: str
+    ident: str
+
+
+@dataclass
 class UserCA(UserList):
     """User correct answers Type Struct"""
 
@@ -79,21 +79,21 @@ class UserCA(UserList):
 
 
 @dataclass
-class UserIA:
+class UserIA(UserList):
     """User incorrect answers Type Struct"""
 
     incorrect_answers: str
 
 
 @dataclass
-class UserSQ:
+class UserSQ(UserList):
     """User incorrect answers Type Struct"""
 
     submitted_questions: str
 
 
 @dataclass
-class UserSV:
-    """User incorrect answers Type Struct"""
+class UserSV(UserList):
+    """User submitted add votes Type Struct"""
 
     submitted_add_votes: str

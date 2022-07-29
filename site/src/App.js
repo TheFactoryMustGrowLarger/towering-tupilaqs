@@ -205,8 +205,9 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
         e.preventDefault();
 
         const data = {
+	    'user_name': userName,
             'question_uuid': singleQuestion?.ident,
-            'vote': vote,
+            'vote': vote
         }
         updateVotes(vote);
 
