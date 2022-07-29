@@ -664,6 +664,7 @@ def get_sq_by_uuid(uuid: str) -> list[Question]:
 def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
     """**Returns a new question for player, ensuring it has not been answered before**...
 
+    :param desc:
     :param uuid: User uuid aka ident
     :return:
 
@@ -751,6 +752,7 @@ def get_ca_by_name(user_name: str) -> list[Question]:
 def add_user(user_name: str) -> str:
     """**Add a new user to the database.**
 
+    :param password:
     :param user_name: it's a username
     :return: unique_uuid of the added user
     """
