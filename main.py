@@ -51,7 +51,7 @@ def process_new_question(event) -> str:
 
     Note: assumes frontend takes care of input sanitization
     """
-    user_uuid = get_or_create_user(event['user'])
+    user_uuid = get_or_create_user(event['user_name'], event['password'])
 
     # FIXME: add difficulty to event
     difficulty = 0
@@ -76,8 +76,11 @@ def process_new_question(event) -> str:
 
 def process_serve_new_question(event) -> dict:
     """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
-    user_uuid = get_or_create_user(event['user_name'])
-
+    user_uuid = get_or_create_user(event['user_name'], event['password'])
+    if user_uuid.lower() == 'already exists':
+        return {'error': 'Username already exists'}
+    elif user_uuid.lower() == 'wrong password':
+        return {'error': 'Wrong password, nice try.'}
     try:
         result = db.api.get_new_question_for_user(user_uuid)
         result = result.__dict__
@@ -95,7 +98,7 @@ def process_serve_new_question(event) -> dict:
 
 def process_new_answer(event) -> str:
     """Takes in a json event with a user answer and sends to database"""
-    user_uuid = get_or_create_user(event['user_name'])
+    user_uuid = get_or_create_user(event['user_name'], event['password'])
     question_uuid = event['question_uuid']
     user_answer = event['user_answer']
 
