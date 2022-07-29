@@ -19,16 +19,18 @@ creater_answers_table = '''
 
 
 # Each user have a list of:
-# - FIXME: questions ids the user has added (so we can go through all and check the number of votes)
-# - So we can (a) check user score and (b) avoid showing the same question again
+# - So we can (a) check user score and (b) avoid showing the same question again:
 # - question ids answered correctly
 # - question ids answered incorrectly
+# - So we can give points for submitted good questions, keep a list of:
+# - questions ids the user has submitted
 create_users_table = '''
     CREATE TABLE USERS(
         ID SERIAL PRIMARY KEY,
         USER_NAME VARCHAR(30) NOT NULL,
         CORRECT_ANSWERS TEXT,
         INCORRECT_ANSWERS TEXT,
+        SUBMITTED_QUESTIONS TEXT,
         IDENT VARCHAR(100) NOT NULL
     )
 '''

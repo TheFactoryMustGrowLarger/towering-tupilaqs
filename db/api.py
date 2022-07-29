@@ -8,8 +8,10 @@ from psycopg import Connection, connect, errors
 from psycopg.rows import class_row
 
 # This project
-from db.utils.config import config
-from db.utils.db_classes import Combined, Question, User, UserCA, UserIA
+from db.db_config.config import config
+from db.utils.db_classes import (
+    Combined, Question, User, UserCA, UserIA, UserSQ
+)
 from db.utils.db_tables import (
     create_questions_table, create_users_table, creater_answers_table
 )
@@ -19,10 +21,14 @@ logger = logging.getLogger('tupilaqs.db')
 
 def __conn_singleton() -> Connection:
     conn = ""
+    conf = config()
     try:
-        conn = connect(**config(section='local'))
+        conn = connect(**conf)
     except errors.ConnectionDoesNotExist as e:
         print(e)
+    except errors.OperationalError as e:
+        logger.exception('db connect failed %s', conf)
+        raise e
     return conn
 
 
@@ -59,7 +65,7 @@ def insert_question(
         expl: str,
         diff: int = 0,
         votes: int = 0
-) -> str:
+) -> Question:
     """**Insert a record database.**
 
     :param question:
@@ -72,6 +78,14 @@ def insert_question(
     # FIXME: Can this updated to check for duplicate question text?
     # Not sure if it should be rejected or allowed to update.
     unique_id = uuid1()
+    question = Question(txt=question,
+                        title=title,
+                        expl=expl,
+                        difficulty=diff,
+                        votes=votes,
+                        id=unique_id,
+                        ident=unique_id)
+
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -79,15 +93,8 @@ def insert_question(
                 INSERT INTO
                     questions (TXT, TITLE, EXPL, DIFFICULTY, VOTES, IDENT)
                 VALUES
-                    ( %(question)s, %(title)s, %(expl)s, %(diff)s, %(votes)s, %(ident)s )
-            """, {
-                    'question': question,
-                    'title': title,
-                    'expl': expl,
-                    'diff': diff,
-                    'votes': votes,
-                    'ident': unique_id,
-                }
+                    ( %(txt)s, %(title)s, %(expl)s, %(difficulty)s, %(votes)s, %(id)s )
+            """, question.__dict__
             )
             cur.execute(
                 """
@@ -100,7 +107,7 @@ def insert_question(
                     'ident': unique_id,
                 }
             )
-            return f"Added `{title}` to the database with UUID {unique_id}."
+            return question
 
 
 def delete_question(uuid: str) -> tuple:
@@ -299,7 +306,7 @@ def update_answer_text(uuid: str, text: str) -> bool:
 
 
 def update_user_ca_by_uuid(uuid: str, ca: str) -> bool:
-    """**Update users `correct_answers` with their `user_name`**...
+    """**Update users `correct_answers` with their `uuid`**...
 
     :param uuid:
     :param ca:
@@ -328,7 +335,7 @@ def update_user_ca_by_uuid(uuid: str, ca: str) -> bool:
 
 
 def update_user_ia_by_uuid(uuid: str, ia: str) -> bool:
-    """**Update users `incorrect_answers` with their `user_name`**...
+    """**Update users `incorrect_answers` with their `uuid`**...
 
     :param uuid:
     :param ia:
@@ -350,6 +357,34 @@ def update_user_ia_by_uuid(uuid: str, ia: str) -> bool:
                     ident = %(uuid)s
             """, {
                     'ia': ia,
+                    'uuid': uuid,
+                }
+            )
+            return True
+
+
+def update_user_sq_by_uuid(uuid: str, sq: str) -> bool:
+    """**Update users `submitted question` with their `uuid`**...
+
+    :param uuid:
+    :param sq: submitted question
+    :return:
+    """
+    # Add delimiter
+    sq = ', ' + sq  # HACK: Better to skip this if submitted_questions is empty
+
+    with __conn_singleton() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE
+                    users
+                SET
+                    submitted_questions = CONCAT(submitted_questions, %(sq)s::text)
+                WHERE
+                    ident = %(uuid)s
+            """, {
+                    'sq': sq,
                     'uuid': uuid,
                 }
             )
@@ -533,7 +568,48 @@ def get_ia_by_uuid(uuid: str) -> list[Question]:
         return [result for result in all_questions if result.ident in ca]
 
 
-def get_new_question_for_user(uuid: str) -> Question:
+def get_sq_by_uuid(uuid: str) -> list[Question]:
+    """**Returns players submitted questions by uuid**...
+
+    :param uuid: User uuid aka ident
+    :return:
+    """
+    with __conn_singleton() as conn:
+        cur = conn.cursor(row_factory=class_row(UserSQ))
+        user_ca = cur.execute(
+            """
+            SELECT
+                submitted_questions
+            FROM
+                users
+            WHERE
+                ident = %(uuid)s
+            """, {
+                'uuid': uuid,
+            }
+        ).fetchone()
+        cur.close()
+        cur = conn.cursor(row_factory=class_row(Question))
+        ca = list()
+        if user_ca.submitted_questions is not None:
+            ca.extend(user_ca.submitted_questions.split(', '))  # Split incorrect answers from STR into a tuple
+
+        ca = list(filter(lambda x: x != '', ca))  # remove empty items
+        logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
+        all_questions = cur.execute(
+            """
+            SELECT
+                *
+            FROM
+                questions as q
+            ORDER BY
+                q.id
+            """
+        ).fetchall()
+        return [result for result in all_questions if result.ident in ca]
+
+
+def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
     """**Returns a new question for player, ensuring it has not been answered before**...
 
     :param uuid: User uuid aka ident
@@ -541,6 +617,10 @@ def get_new_question_for_user(uuid: str) -> Question:
 
     :raises IndexError if no more questions are available
     """
+    order = 'DESC'
+    if not desc:
+        order = 'ASC'
+
     with __conn_singleton() as conn:
         cur = conn.cursor(row_factory=class_row(User))
         user_ca = cur.execute(
@@ -550,6 +630,7 @@ def get_new_question_for_user(uuid: str) -> Question:
                 user_name,
                 correct_answers,
                 incorrect_answers,
+                submitted_questions,
                 ident
             FROM
                 users
@@ -577,10 +658,10 @@ def get_new_question_for_user(uuid: str) -> Question:
             SELECT
                 *
             FROM
-                questions as q
+                questions
             ORDER BY
-                q.id
-            """
+                questions.votes %s
+            """ % order
         ).fetchall()
 
         applicable_questions = [result for result in all_questions if result.ident not in answers]
@@ -710,6 +791,7 @@ def get_user_by_uuid(uuid: str) -> User:
                 user_name,
                 correct_answers,
                 incorrect_answers,
+                submitted_questions,
                 ident
             FROM
                 users
@@ -794,6 +876,16 @@ if __name__ == '__main__':
     assert q.ident not in correct_answers_ident, 'vops, wanted a new question got %s' % q.ident
     assert q.ident not in incorrect_answers_ident, 'vops, wanted a new question got %s' % q.ident
     print('New question', q)
+
+    # Test submitted questions
+    assert len(get_sq_by_uuid(user_id)) == 0
+
+    number_of_submitted_questions = 2
+    for q in questions[:number_of_submitted_questions]:
+        update_user_sq_by_uuid(user_id, sq=q.ident)
+
+    submitted = get_sq_by_uuid(user_id)
+    assert len(submitted) == 2, 'expected length 2, got %d %s' % (len(submitted), submitted)
 
     # print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
     #

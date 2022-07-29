@@ -31,3 +31,5 @@ build/
 .DS_Store
 # Emacs
 *~
+
+db/db_config/database.ini

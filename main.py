@@ -63,8 +63,14 @@ def process_new_question(event) -> str:
 
     logger.info('Inserting %s by user uuid %s', database_insert, user_uuid)
 
-    # FIXME: add question to user_uuid to give user a score for submitting good questions
-    return db.api.insert_question(**database_insert)
+    question = db.api.insert_question(**database_insert)
+
+    # add question uuid to User, so we know who submitted it and can calculate score based on good questions
+    db.api.update_user_sq_by_uuid(user_uuid, sq=str(question.ident))
+
+    ret = "Added `{title}` to the database with UUID {unique_id}.".format(title=question.title,
+                                                                          unique_id=question.ident)
+    return ret
 
 
 def process_serve_new_question(event) -> dict:
