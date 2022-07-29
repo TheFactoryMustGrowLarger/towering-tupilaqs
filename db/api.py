@@ -749,7 +749,7 @@ def get_ca_by_name(user_name: str) -> list[Question]:
         return [result for result in results if result.ident in ca]
 
 
-def add_user(user_name: str) -> str:
+def add_user(user_name: str, password: str) -> str or bool:
     """**Add a new user to the database.**
 
     :param password:
@@ -762,13 +762,33 @@ def add_user(user_name: str) -> str:
             cur.execute(
                 """
                 INSERT INTO
-                    users (USER_NAME, CORRECT_ANSWERS, IDENT)
+                    users (
+                    USER_NAME,
+                    PASSWORD,
+                    CORRECT_ANSWERS,
+                    INCORRECT_ANSWERS,
+                    SUBMITTED_QUESTIONS,
+                    SUBMITTED_ADD_VOTES,
+                    IDENT
+                    )
                 VALUES
-                    ( %(user_name)s, %(correct_answers)s, %(ident)s )
+                    (
+                    %(user_name)s,
+                    %(password)s,
+                    %(correct_answers)s,
+                    %(incorrect_answers)s,
+                    %(submitted_questions)s,
+                    %(submitted_add_votes)s,
+                    %(ident)s
+                    )
 
             """, {
                     'user_name': user_name,
+                    'password': password,
                     'correct_answers': "",
+                    'incorrect_answers': "",
+                    'submitted_questions': "",
+                    'submitted_add_votes': "",
                     'ident': unique_id,
                 }
             )
@@ -844,14 +864,32 @@ def get_user_by_uuid(uuid: str) -> User:
         return results
 
 
-def get_user_by_name(u_name: str) -> User:
+def get_user_by_name(u_name: str) -> User or None:
     """Get User by username"""
     with __conn_singleton() as conn:
         with conn.cursor(row_factory=class_row(User)) as cur:
             sql = "select * from users where user_name = %s"
             results = cur.execute(sql, (u_name,)).fetchone()
             logger.info("get_user results: %s", results)
-            return results or None
+            if results is not None:
+                return results
+            return None
+
+
+def check_password(user_name: str, password: str) -> bool:
+    """**Checks password**...
+
+    :param password:
+    :param user_name:
+    :return:
+    """
+    with __conn_singleton() as conn:
+        with conn.cursor(row_factory=class_row(User)) as cur:
+            sql = "select * from users where user_name = %s"
+            results = cur.execute(sql, (user_name,)).fetchone()
+            if results is not None and results.password == password:
+                return True
+            return False
 
 
 if __name__ == '__main__':
