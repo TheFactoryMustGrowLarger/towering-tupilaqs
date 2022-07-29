@@ -848,7 +848,7 @@ def get_user_by_name(u_name: str) -> User:
         with conn.cursor(row_factory=class_row(User)) as cur:
             sql = "select * from users where user_name = %s"
             results = cur.execute(sql, (u_name,)).fetchone()
-            print(f"get_user results: {results}")
+            logger.info("get_user results: %s", results)
             return results or None
 
 
