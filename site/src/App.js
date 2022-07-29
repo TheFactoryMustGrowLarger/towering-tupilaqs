@@ -241,13 +241,13 @@ const Box = ({ webSocket, userName, singleQuestion, setSQuestion, getExplanation
                 {
                     display: getExplanation? "none": "flex",
                     justifyContent:
-                        singleQuestion?.title
+                        singleQuestion?.title.toLowerCase().includes('you have answered all questions')
                             ? "center": ""
                 }
             } className="buttons">
                 <div style={
                     {
-                        display: singleQuestion?.title
+                        display: singleQuestion?.title.toLowerCase().includes('you have answered all questions')
                             ? "none": "flex"
                     }
                 }>
