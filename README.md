@@ -18,6 +18,7 @@ Image credit: Adapted from
 ## Introduction
 Quiz game to determine if a piece of code is a bug or a feature for Python Discord Code Jam 2022
 
+original repository used for most of the jam got deleted or hidden, so pull request history is lost: [github.com/Devansh3712/towering-tupilaq](https://github.com/Devansh3712/towering-tupilaq)
 # Requirements
 ## Docker installation
 Install docker for your operating system: https://docs.docker.com/get-docker/
