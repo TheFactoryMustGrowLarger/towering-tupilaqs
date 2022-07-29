@@ -148,7 +148,7 @@ async def websocket_echo(
             await websocket.send_json(
                 {
                     'type': 'serve_question',
-                    'data': ret
+                    'data': json.dumps(ret)
                 }
             )
         elif event_type == 'answered_question':
