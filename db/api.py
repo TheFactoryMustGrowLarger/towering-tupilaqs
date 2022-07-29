@@ -1,7 +1,7 @@
 # standard library imports
 import logging
 import random
-from uuid import uuid1
+from uuid import uuid4
 
 # third party imports
 from psycopg import Connection, connect, errors
@@ -77,7 +77,7 @@ def insert_question(
     """
     # FIXME: Can this updated to check for duplicate question text?
     # Not sure if it should be rejected or allowed to update.
-    unique_id = uuid1()
+    unique_id = uuid4()
     question = Question(txt=question,
                         title=title,
                         expl=expl,
@@ -258,7 +258,7 @@ def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add'
             current_votes = get_single_question(question_uuid).votes
             vote_success = update_user_sv_up_by_uuid(user_uuid, sv=question_uuid)
             logger.info('update_question_votes(%s, %s, %s). Current votes %d, vote_success = %s',
-                        question_uuid, user_uuid, votes, vote_success)
+                        question_uuid, user_uuid, votes, current_votes, vote_success)
             # Has the user already voted?
             # FIXME: Support downvote, maybe only as a 'remove' upvote?
             if vote_success is False:
@@ -422,7 +422,7 @@ def update_user_sv_up_by_uuid(uuid: str, sv: str) -> bool:
             ).fetchone()
 
             already_voted_up = user_sv.as_list('submitted_add_votes')
-
+            logger.debug('already_voted_up by %s: %s', uuid, already_voted_up)
             if sv in already_voted_up:
                 return False
 
@@ -754,7 +754,7 @@ def add_user(user_name: str) -> str:
     :param user_name: it's a username
     :return: unique_uuid of the added user
     """
-    unique_id = uuid1()
+    unique_id = uuid4()
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -932,6 +932,18 @@ if __name__ == '__main__':
 
     update_success = update_user_sv_up_by_uuid(user_id, sv=q.ident)
     assert update_success is False, 'Already added, not did expect this to work the second time around'
+
+    user_id = get_user_by_name('username1').ident
+    user_id2 = get_user_by_name('username2').ident
+    print('USER id 1', user_id)
+    print('USER id 2', user_id2)
+
+    update_question_votes(question_uuid=q.ident,
+                          user_uuid=user_id2, votes='add')
+
+    # FIXME:
+    # update_question_votes(question_uuid=q.ident,
+    #                       user_uuid=user_id, votes='sub')
 
     # print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
     #
