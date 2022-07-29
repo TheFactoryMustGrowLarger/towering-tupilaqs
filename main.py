@@ -116,6 +116,20 @@ def process_new_answer(event) -> str:
     return ret
 
 
+def process_vote_question(event) -> str:
+    """Takes in a json event with a user vote and sends to database,
+
+    :returns: a dictonary with question_id and current vote.
+    """
+    question_id = event['question_uuid']
+    vote = event['vote']
+
+    ret = db.api.update_question_votes(question_id, vote)
+
+    logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, ret))
+    return ret
+
+
 @app.websocket("/quiz")
 async def websocket_echo(
         websocket: WebSocket,
@@ -166,7 +180,7 @@ async def websocket_echo(
                 }
             )
         elif event_type == 'vote_question':
-            ret = db.api.update_question_votes(event['data']['question_uuid'], event['data']['vote'])
+            ret = process_vote_question(event['data'])
             await websocket.send_json(
                 {
                     'type': 'vote_feedback',
