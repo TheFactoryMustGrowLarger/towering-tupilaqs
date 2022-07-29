@@ -533,7 +533,7 @@ def get_ia_by_uuid(uuid: str) -> list[Question]:
         return [result for result in all_questions if result.ident in ca]
 
 
-def get_new_question_for_user(uuid: str) -> list[Question]:
+def get_new_question_for_user(uuid: str) -> Question:
     """**Returns a new question for player, ensuring it has not been answered before**...
 
     :param uuid: User uuid aka ident
@@ -722,27 +722,14 @@ def get_user_by_uuid(uuid: str) -> User:
         return results
 
 
-def get_user_by_name(user_name: str) -> User:
+def get_user_by_name(u_name: str) -> User:
     """Get User by username"""
     with __conn_singleton() as conn:
-        cur = conn.cursor(row_factory=class_row(User))
-        results = cur.execute(
-            """
-            SELECT
-                id,
-                user_name,
-                correct_answers,
-                incorrect_answers,
-                ident
-            FROM
-                users
-            WHERE
-                user_name = %(user_name)s
-        """, {
-                'user_name': user_name,
-            }
-        ).fetchone()
-        return results
+        with conn.cursor(row_factory=class_row(User)) as cur:
+            sql = "select * from users where user_name = %s"
+            results = cur.execute(sql, (u_name,)).fetchone()
+            print(f"get_user results: {results}")
+            return results or None
 
 
 if __name__ == '__main__':
