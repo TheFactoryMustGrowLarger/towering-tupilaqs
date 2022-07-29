@@ -20,7 +20,6 @@ import React, {useEffect, useRef, useState} from 'react';
  * @returns {String}
  */
 const createMessage = (type, data) => {
-
     return JSON.stringify({ 'type': type, 'data': data});
 }
 
@@ -68,10 +67,10 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
     }
 
     const clearAddQ = () => {
-        SetNewQuestionText("")
-        SetNewQuestionTitle("")
-        SetCorrectAnswer("")
-        SetNewQuestionExplanation("")
+        SetNewQuestionText("");
+        SetNewQuestionTitle("");
+        SetCorrectAnswer("");
+        SetNewQuestionExplanation("");
     }
 
     const CheckUsernameField = () => {
@@ -90,7 +89,9 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
                     new_question_explanation: NewQuestionExplanation,
 
                 };
-          webSocket.send(createMessage('insert_new_question', request))
+          webSocket.send(createMessage('insert_new_question', request));
+        } else {
+            setError("The Questions field must be filled in!");
         }
         else{
             setError("The Questions field must be filled in!")
@@ -193,9 +194,9 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
         e.preventDefault();
 
         const data = {
-	    'user_name': userName,
+	        'user_name': userName,
             'question_uuid': singleQuestion?.ident,
-            'vote': vote
+            'vote': vote,
         }
 
         webSocket?.send(createMessage('vote_question', data));
@@ -342,15 +343,15 @@ function App() {
                     }
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
-		    setExplanation('');
+		            setExplanation('');
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
-		    setExplanation(data)
+		            setExplanation(data)
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
-		    setVotes(data['votes'].toString())
+		            setVotes(data['votes'].toString())
                     break;
                 default:
                     console.log(debugMessage(type, data));
