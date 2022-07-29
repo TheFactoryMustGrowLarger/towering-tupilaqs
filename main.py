@@ -31,7 +31,13 @@ problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication'
                      ("problem_6_truncatable_number.py", 'Feature',
                       'Is it truncatable?', "problem_6.md", 2),
                      ("problem_7_lychrel_numbers.py", 'Feature',
-                         'Is it Lychrel?', "problem_7.md", 2)
+                         'Is it Lychrel?', "problem_7.md", 2),
+                     ("problem_8_count_letter.py", 'Bug',
+                         'Count letter of a number?', "problem_8.md", 2),
+                     ("problem_9_amicable_numbers.py", 'Bug',
+                      'Are amicable numbers', "problem_9.md", 2),
+                     ("problem_10_monopoly_simulation.py", 'Feature',
+                      'Monopoly Probabilities', "problem_10.md", 3)
                      ]
 
 for script, answer, title, explanation, difficulty in problems_keywords:
