@@ -22,11 +22,18 @@ install_remote:
 install_docker:
 	cp db/db_config/database_docker.ini db/db_config/database.ini
 
+# Note: needs to run as sudo user
 docker_up:
-	sudo docker-compose up
+	docker-compose up
 
 docker_up_build:
-	sudo docker-compose up --build
+	docker-compose up --build
 
 docker_cleanup_all:
-	sudo docker system prune -a --volumes
+	docker system prune -a --volumes
+
+postgresql_linux_stop:
+	systemctl stop postgresql.service
+
+postgresql_linux_start:
+	systemctl start postgresql.service
