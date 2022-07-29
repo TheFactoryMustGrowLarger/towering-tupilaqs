@@ -21,13 +21,17 @@ logger = setup_logger()
 app = FastAPI()
 # FIXME: Should only be done once, clears the database
 db.api.initiate_database()
-problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
-                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
-                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1),
+problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1.md", 0),
+                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2.md", 0),
+                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3.md", 1),
                      ("problem_4_double_base_palindrome.py", 'Bug', 'Double base palindrome',
                       "problem_4_explanation.md", 1),
                      ("problem_5_count_ways_to_make_number.py", 'Feature',
-                      'Count Ways to make a number', "problem_5_explanation.md", 2)
+                      'Count Ways to make a number', "problem_5.md", 2),
+                     ("problem_6_truncatable_number.py", 'Feature',
+                      'Is it truncatable?', "problem_6.md", 2),
+                     ("problem_7_lychrel_numbers.py", 'Feature',
+                         'Is it Lychrel?', "problem_7.md", 2)
                      ]
 
 for script, answer, title, explanation, difficulty in problems_keywords:
