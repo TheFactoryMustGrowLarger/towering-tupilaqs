@@ -125,10 +125,10 @@ def process_vote_question(event) -> str:
     question_id = event['question_uuid']
     vote = event['vote']
 
-    ret = db.api.update_question_votes(question_id, user_uuid, vote)
+    number_of_votes = db.api.update_question_votes(question_id, user_uuid, vote)
 
-    logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, ret))
-    return ret
+    logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, number_of_votes))
+    return {'ident': question_id, 'votes': number_of_votes}
 
 
 @app.websocket("/quiz")

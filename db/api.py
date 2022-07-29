@@ -246,12 +246,12 @@ def update_question_difficulty(uuid: str, diff: int) -> bool:
             return True
 
 
-def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add') -> dict:
+def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add') -> int:
     """**Update QUESTION `VOTES`.**
 
     :param question_uuid: Needs to be in string format for comparison
     :param votes: Either 'add' or 'sub' / Add or Subtract
-    :return:
+    :return: the updated number of votes
     """
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
@@ -262,7 +262,7 @@ def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add'
             # Has the user already voted?
             # FIXME: Support downvote, maybe only as a 'remove' upvote?
             if vote_success is False:
-                return {'ident': question_uuid, 'votes': current_votes}
+                return current_votes
 
             new_votes = 0
             if votes == 'add':
@@ -285,7 +285,7 @@ def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add'
                     'ident': question_uuid,
                 }
             )
-            return {'ident': question_uuid, 'votes': new_votes}
+            return new_votes
 
 
 def update_answer_text(uuid: str, text: str) -> bool:
