@@ -95,9 +95,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
         } else {
             setError("The Questions field must be filled in!");
         }
-        else{
-            setError("The Questions field must be filled in!")
-        }
     }
     return (
         <div>
