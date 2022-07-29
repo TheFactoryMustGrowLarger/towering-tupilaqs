@@ -64,6 +64,7 @@ class User(UserList):
 
     id: int
     user_name: str
+    password: str
     correct_answers: str
     incorrect_answers: str
     submitted_questions: str
