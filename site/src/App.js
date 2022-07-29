@@ -42,25 +42,25 @@ const debugMessage = (type, data) => {
  * @param {Function} setUserName
  * @param {String} userName
  *
+ * @param userPassword
+ * @param setUserPassword
+ * @param error
+ * @param setError
  * @returns {JSX.Element}
  * @constructor
  */
-const LandingPage = ({ webSocket, setUserName, userName}) => {
-    const [error, setError] = useState("")
-
-    const [NewQuestionText, SetNewQuestionText] = useState("")
-    const [CorrectAnswer, SetCorrectAnswer] = useState("")
-    const [NewQuestionTitle, SetNewQuestionTitle] = useState("")
-    const [NewQuestionExplanation, SetNewQuestionExplanation] = useState("")
-
+const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPassword, error, setError }) => {
+    const [NewQuestionText, SetNewQuestionText] = useState("");
+    const [CorrectAnswer, SetCorrectAnswer] = useState("");
+    const [NewQuestionTitle, SetNewQuestionTitle] = useState("");
+    const [NewQuestionExplanation, SetNewQuestionExplanation] = useState("");
 
     const add_new_question = (e) => {
         e.preventDefault();
-        if (userName) {
-            CheckQuestionField()
-
+        if (userName && userPassword) {
+            CheckQuestionField();
         } else {
-            setError("The user name field must be filled in!")
+            setError("The user name and password field needs to be filled in!");
         }
 
         clearAddQ();
@@ -73,9 +73,13 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
         SetNewQuestionExplanation("");
     }
 
-    const CheckUsernameField = () => {
-        if(userName === ""){
-            setError("The username field must be filled in!")
+    const checkFields = () => {
+        if (userName === '' && userPassword === '') {
+            setError("Username and Password field needs to be filled in!");
+        } else if (userName === '' && userPassword) {
+            setError("Username field needs to be filled in!");
+        } else if (userName && userPassword === '') {
+            setError("Password field needs to be filled in!");
         }
 
     }
@@ -83,6 +87,7 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
         if(NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== ""){
                 const request = {
                     user: userName,
+                    password: sha256(userPassword),
                     question: NewQuestionText,
                     correct_answer: CorrectAnswer,
                     new_question_title: NewQuestionTitle,
@@ -101,9 +106,9 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
         <div>
             <div className="inputs registration">
                 <input type="text" value={userName} onChange={e => setUserName(e.target.value)} className="input-base" id="itemID" placeholder="Username: "/>
-
+                <input type="text" value={userPassword} onChange={e => setUserPassword(e.target.value)} className="input-base" id="itemID" placeholder="Password: "/>
             </div>
-            <Link to={userName ? "/categories" : ""}><button onClick={CheckUsernameField} className="bb-button start-button">New Game</button></Link>
+            <Link to={userName && userPassword ? "/categories" : ""}><button onClick={checkFields} className="bb-button start-button">New Game</button></Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
                 <input type="text" value={NewQuestionText} onChange={e => SetNewQuestionText(e.target.value)} className="input-base" id="newQuestionText" placeholder="New Question: "/>
@@ -146,19 +151,22 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
  * @returns {JSX.Element}
  * @constructor
  */
-const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, getExplanation, getVotes }) => {
+const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes }) => {
 
     const handleNextQuestions = () => {
-        if (userName.length > 0) {
+        if (userName.length > 0 && userPassword.length > 0) {
             const data = {
                 'user_name': userName,
+                'password': sha256(userPassword).toString(),
             }
             localStorage.setItem('username', userName);
+            localStorage.setItem('password', sha256(userPassword));
             webSocket?.send(createMessage('get_question', data));
         } else {
             // use localstorage
             const data = {
                 'user_name': localStorage.getItem('username'),
+                'password': localStorage.getItem('password'),
             }
             webSocket?.send(createMessage('get_question', data));
         }
@@ -184,6 +192,7 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
 
         const data = {
             'user_name': userName,
+            'password': sha256(userPassword).toString(),
 	        'question_uuid': singleQuestion?.ident,
 	        'user_answer': guess
         }
@@ -306,6 +315,7 @@ function App() {
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
+    const [userPassword, setUserPassword] = useState('');
     const [getExplanation, setExplanation] = useState('');
     const [getVotes, setVotes] = useState('0');
     const [singleQuestion, setSQuestion] = useState({});
@@ -367,6 +377,8 @@ function App() {
         webSocket: ws.current,
         userName: userName,
         setUserName: setUserName,
+        userPassword: userPassword,
+        setUserPassword: setUserPassword,
         wsMessage: wsMessage,
         questions: questions,
         setQuestions: setQuestions,
