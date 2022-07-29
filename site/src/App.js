@@ -134,17 +134,17 @@ const LandingPage = ({ webSocket, setUserName, userName}) => {
  * @param {Function} getExplanation
  * @param {Function} setSQuestion
  * @param {Object} singleQuestion
- * @param {String} singleQuestion.txt - Das question
+ * @param {String} singleQuestion.txt - The question
  * @param {String} singleQuestion.title - Title
  * @param {String} singleQuestion.expl - For cheating
- * @param {Number} singleQuestion.difficulty - How difficulty das question is
+ * @param {Number} singleQuestion.difficulty - How difficulty the question is
  * @param {Number} singleQuestion.votes - Amount of votes
- * @param {String} singleQuestion.ident - Its an identifier
+ * @param {String} singleQuestion.ident - identifier
  *
  * @returns {JSX.Element}
  * @constructor
  */
-const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, getExplanation }) => {
+const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, getExplanation, getVotes }) => {
 
     const handleNextQuestions = () => {
         if (userName.length > 0) {
@@ -190,17 +190,6 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
         webSocket?.send(createMessage('answered_question', data));
     }
 
-    const updateVotes = (vote) => {
-        if (vote === 'add') {
-            const updatedVotes = singleQuestion.votes += 1;
-            setSQuestion(oldSQ => ({...oldSQ, ...{votes: updatedVotes}}));
-        }
-        if (vote === 'sub') {
-            const updatedVotes = singleQuestion.votes -= 1;
-            setSQuestion(oldSQ => ({...oldSQ, ...{votes: updatedVotes}}));
-        }
-    }
-
     const handleVote = (e, vote) => {
         e.preventDefault();
 
@@ -209,7 +198,6 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
             'question_uuid': singleQuestion?.ident,
             'vote': vote
         }
-        updateVotes(vote);
 
         webSocket?.send(createMessage('vote_question', data));
     }
@@ -234,14 +222,11 @@ const Box = ({ webSocket, userName, setUserName, singleQuestion, setSQuestion, g
                     Difficulty: {singleQuestion?.difficulty}
                 </h4>
                 <h4 style={{maxWidth: '550px', color: '#FFC0CB'}}>
-                    Votes: {singleQuestion?.votes}
+                    Votes: {getVotes}
                 </h4>
                 <span>
                     <button onClick={(e) => handleVote(e, 'add')}>
-                        Updoot
-                    </button>
-                    <button onClick={(e) => handleVote(e, 'sub')}>
-                        Downdoot
+                        Upvote question
                     </button>
                 </span>
             </div>
@@ -305,11 +290,6 @@ function MyCoolCodeBlock({ code, language }) {
 }
 
 function App() {
-    // Tried to define this useState at this level, and then pass the getQuestion reference
-    // down to the CodeBox function
-    // const [getQuestion, setQuestion] = useState("print('hello world')");
-    //FIXME:Did not work: <Route path="/categories" element={CodeBox(getQuestion)}/>
-
     const socketURL = useRef('ws://localhost:8000/quiz');
     const ws = useRef(null);
     const [token, setToken] = useState('');
@@ -317,6 +297,7 @@ function App() {
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
     const [getExplanation, setExplanation] = useState('');
+    const [getVotes, setVotes] = useState('0');
     const [singleQuestion, setSQuestion] = useState({});
 
     // Only runs when connection is open and closed.
@@ -347,14 +328,15 @@ function App() {
                     console.log(debugMessage(type, JSON.parse(data)));
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
-		            setExplanation('');
+		    setExplanation('');
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
-		            setExplanation(data)
+		    setExplanation(data)
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
+		    setVotes(data['votes'].toString())
                     break;
                 default:
                     console.log(debugMessage(type, data));
@@ -374,6 +356,7 @@ function App() {
         questions: questions,
         setQuestions: setQuestions,
         getExplanation: getExplanation,
+	getVotes: getVotes,
         setExplanation: setExplanation,
         singleQuestion: singleQuestion,
         setSQuestion: setSQuestion,
