@@ -20,6 +20,3 @@ def __proper_divisors(number):
         if number % i == 0:
             divisors.append(i)
     return divisors
-
-
-print(are_amicable(220, 284))

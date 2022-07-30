@@ -33,6 +33,3 @@ def __is_prime(number):
         if number % x == 0:
             return False
     return True
-
-
-print(is_truncatable(153))

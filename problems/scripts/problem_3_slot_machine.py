@@ -29,6 +29,3 @@ def __all_numbers_are_the_same(numbers):
 
 def __two_numbers_are_the_same(numbers):
     return set(numbers) == 2
-
-
-print(slot_machine())
