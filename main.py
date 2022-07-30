@@ -37,7 +37,12 @@ for script, answer, title, explanation, difficulty in problems_keywords:
 class WrongPasswordException(Exception):
     """raised if the password is incorrect"""
 
-    error_event = {'error': 'Wrong password, nice try.'}
+    def __init__(self, message='Wrong password, try again.'):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return {'error': self.message}
 
 
 class InvalidQuestionIDException(Exception):
@@ -51,7 +56,7 @@ def get_or_create_user(user: str, password: str) -> str:
         if db.api.check_password(user, password):
             return u.ident
         else:
-            raise WrongPasswordException("wrong password")
+            raise WrongPasswordException()
     else:
         return db.api.add_user(user, password)
 
@@ -168,7 +173,15 @@ async def websocket_echo(
                                                event['data']['password'])
                 logger.info('user_uuid %s', user_uuid)
             except WrongPasswordException as e:
-                return e.error_event
+                await websocket.send_json(
+                    {
+                        'type': 'error',
+                        'data': {
+                            'message': e.message
+                        }
+                    }
+                )
+                return
 
         event_type = event['type']
         if event_type == 'token_pls':
