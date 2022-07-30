@@ -35,6 +35,17 @@ const debugMessage = (type, data) => {
     return `${date} <> tupilaqs <> DEBUG <> ${type} - ${JSON.stringify(data)}`;
 }
 
+const NotFound = () => {
+    return (
+        <div className="box" style={{padding: "5px"}}>
+            404 PAGE NOT FOUND
+            <button className="bb-button" style={{marginTop: "10px"}}>
+                    <Link to="/">Go home, youre durnk.</Link>
+            </button>
+        </div>
+    )
+}
+
 /**
  * @description CHANGE ME
  *
@@ -391,8 +402,9 @@ function App() {
             <h1 className="main-title">WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
             <h1 className="main-title">{wsMessage}</h1>
             <Routes>
-                <Route path="/" element={<LandingPage{...propsPackage}/>}/>
-                <Route path="/categories" element={<Box {...propsPackage} />}/>
+                <Route exact path="/" element={<LandingPage{...propsPackage}/>}/>
+                <Route exact path="/categories" element={<Box {...propsPackage} />}/>
+                <Route path="*" element={<NotFound/>}/>
             </Routes>
 	    </div>
 	</BrowserRouter>
