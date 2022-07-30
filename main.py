@@ -1,5 +1,5 @@
 import json
-import secrets
+# import secrets
 from typing import Union
 
 import psycopg
@@ -37,7 +37,12 @@ for script, answer, title, explanation, difficulty in problems_keywords:
 class WrongPasswordException(Exception):
     """raised if the password is incorrect"""
 
-    error_event = {'error': 'Wrong password, nice try.'}
+    def __init__(self, message='Wrong password, try again.'):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return {'error': self.message}
 
 
 class InvalidQuestionIDException(Exception):
@@ -51,7 +56,7 @@ def get_or_create_user(user: str, password: str) -> str:
         if db.api.check_password(user, password):
             return u.ident
         else:
-            raise WrongPasswordException("wrong password")
+            raise WrongPasswordException()
     else:
         return db.api.add_user(user, password)
 
@@ -61,6 +66,8 @@ def process_new_question(user_uuid, event) -> str:
 
     Note: assumes frontend takes care of input sanitization
     """
+    assert user_uuid is not None
+
     # FIXME: add difficulty to event
     difficulty = 0
 
@@ -85,13 +92,14 @@ def process_new_question(user_uuid, event) -> str:
 def process_serve_new_question(user_uuid, event) -> dict:
     """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
     try:
-        result = db.api.get_new_question_for_user(user_uuid)
-        result = result.__dict__
+        question = db.api.get_new_question_for_user(user_uuid)
+        result = {'txt': question.txt,
+                  'title': question.title,
+                  'votes': question.votes,
+                  'ident': question.ident}
     except IndexError:
-        default = 'You have answered all questions, add more to the database!'
-        result = {'txt': default,
-                  'title': default,
-                  'expl': default,
+        result = {'txt': '',
+                  'title': 'You have answered all questions, add more to the database!',
                   'votes': 0,
                   'ident': 'INVALID'}
 
@@ -105,10 +113,7 @@ def process_new_answer(user_uuid, event) -> str:
     :returns: a string containing user feedback (either "Correct!" or "Sorry this was a <Bug/Feature>") and
               answer explanation
     """
-    try:
-        user_uuid = get_or_create_user(event['user_name'], event['password'])
-    except WrongPasswordException as e:
-        return e.error_event
+    assert user_uuid is not None
 
     question_uuid = event['question_uuid']
     user_answer = event['user_answer']
@@ -131,11 +136,12 @@ def process_new_answer(user_uuid, event) -> str:
     return ret
 
 
-def process_vote_question(user_uuid, event) -> str:
+def process_vote_question(user_uuid, event) -> dict[str, int]:
     """Takes in a json event with a user vote and sends to database,
 
     :returns: a dictonary with question_id and current vote.
     """
+    assert user_uuid is not None
     question_id = event['question_uuid']
     vote = event['vote']
 
@@ -149,7 +155,7 @@ def process_vote_question(user_uuid, event) -> str:
 async def websocket_echo(
         websocket: WebSocket,
 ):
-    """Handle all the shizz"""
+    """Handle all requests from frontend"""
     await websocket.accept()
     while True:
         try:
@@ -161,24 +167,34 @@ async def websocket_echo(
         logger.debug('quiz-received-data: %s', data)
         event = json.loads(data)
         user_uuid = None
-        if 'passowrd' in event:
+        if 'data' in event and 'password' in event['data']:
             try:
-                user_uuid = get_or_create_user(event['user_name'],
-                                               event['password'])
+                user_uuid = get_or_create_user(event['data']['user_name'],
+                                               event['data']['password'])
+                logger.info('user_uuid %s', user_uuid)
             except WrongPasswordException as e:
-                return e.error_event
+                await websocket.send_json(
+                    {
+                        'type': 'error',
+                        'data': {
+                            'message': e.message
+                        }
+                    }
+                )
+                return
 
         event_type = event['type']
-        if event_type == 'token_pls':
-            await websocket.send_json(
-                {
-                    'type': 'auth',
-                    'data': {
-                        'token': secrets.token_urlsafe()
-                    }
-                }
-            )
-        elif event_type == 'insert_new_question':
+        # if event_type == 'token_pls':
+        #     await websocket.send_json(
+        #         {
+        #             'type': 'auth',
+        #             'data': {
+        #                 'token': secrets.token_urlsafe()
+        #             }
+        #         }
+        #     )
+        # el
+        if event_type == 'insert_new_question':
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
                 {

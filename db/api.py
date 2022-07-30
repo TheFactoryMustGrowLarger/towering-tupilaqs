@@ -422,7 +422,10 @@ def update_user_sv_up_by_uuid(uuid: str, sv: str) -> bool:
                 }
             ).fetchone()
 
-            already_voted_up = user_sv.as_list('submitted_add_votes')
+            already_voted_up = list()
+            if user_sv is not None:
+                already_voted_up.extend(user_sv.as_list('submitted_add_votes'))
+
             logger.debug('already_voted_up by %s: %s', uuid, already_voted_up)
             if sv in already_voted_up:
                 return False
@@ -570,7 +573,10 @@ def get_ca_by_uuid(uuid: str) -> list[Question]:
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
 
-        ca = user_ca.as_list('correct_answers')
+        ca = list()
+        if user_ca is not None:
+            ca.extend(user_ca.as_list('correct_answers'))
+
         logger.debug('get_ca_by_uuid, correct answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
             """
@@ -607,7 +613,9 @@ def get_ia_by_uuid(uuid: str) -> list[Question]:
         ).fetchone()
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
-        ca = user_ca.as_list('incorrect_answers')
+        ca = list()
+        if user_ca is not None:
+            ca.extend(user_ca.as_list('incorrect_answers'))
 
         logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
@@ -646,7 +654,8 @@ def get_sq_by_uuid(uuid: str) -> list[Question]:
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
         ca = list()
-        ca.extend(user_ca.as_list('submitted_questions'))
+        if user_ca is not None:
+            ca.extend(user_ca.as_list('submitted_questions'))
 
         logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
@@ -692,8 +701,9 @@ def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
         cur.close()
 
         answers = list()
-        answers.extend(user_ca.as_list('correct_answers'))
-        answers.extend(user_ca.as_list('incorrect_answers'))
+        if user_ca is not None:
+            answers.extend(user_ca.as_list('correct_answers'))
+            answers.extend(user_ca.as_list('incorrect_answers'))
 
         logger.debug('get_new_question_for_user, answers = %d: %s', len(answers), answers)
 
@@ -736,7 +746,10 @@ def get_ca_by_name(user_name: str) -> list[Question]:
         ).fetchone()
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
-        ca = user_ca.as_list('correct_answers')
+        ca = list()
+        if user_ca is not None:
+            ca.extend(user_ca.as_list('correct_answers'))
+
         results = cur.execute(
             """
             SELECT
@@ -888,8 +901,13 @@ def check_password(user_name: str, password: str) -> bool:
         with conn.cursor(row_factory=class_row(User)) as cur:
             sql = "select * from users where user_name = %s"
             results = cur.execute(sql, (user_name,)).fetchone()
-            if results is not None and results.password == password:
-                return True
+
+            if results is not None:
+                password_match = results.password == password
+                logger.debug('password check %s == %s: %s', results.password, password,
+                             password_match)
+                return password_match
+
             return False
 
 
@@ -911,7 +929,7 @@ if __name__ == '__main__':
                 diff=random.randrange(1, 5)
             )
         )
-        print(add_user(user_name=f"username{i}", password='123'))
+        print(add_user(user_name=f"username{i}", password="123"))
 
     print(get_single_question_by_votes())
     print(delete_user_by_name("username9"))
