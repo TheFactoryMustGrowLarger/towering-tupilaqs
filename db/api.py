@@ -25,6 +25,7 @@ def __conn_singleton() -> Connection:
     try:
         conn = connect(**conf)
     except errors.ConnectionDoesNotExist as e:
+        logger.exception('db connect failed %s', conf)
         print(e)
     except errors.OperationalError as e:
         logger.exception('db connect failed %s', conf)
@@ -45,7 +46,7 @@ def initiate_database() -> None:
     :return: if everything was successful
     """
     with __conn_singleton() as conn:
-        print("Connecting to DB")
+        logger.info("Connecting to DB")
         with conn.cursor() as cur:
             cur.execute("DROP TABLE IF EXISTS QUESTIONS")
             cur.execute("DROP TABLE IF EXISTS ANSWERS")
@@ -910,7 +911,7 @@ if __name__ == '__main__':
                 diff=random.randrange(1, 5)
             )
         )
-        print(add_user(user_name=f"username{i}"))
+        print(add_user(user_name=f"username{i}", password='123'))
 
     print(get_single_question_by_votes())
     print(delete_user_by_name("username9"))
