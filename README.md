@@ -28,6 +28,7 @@ Linux/Ubuntu
 sudo snap install docker
 sudo docker-compose up
 ```
+in site/src/App.js, edit the websocket url to be `const socketURL = useRef('ws://python_app:8000/quiz');`. FIXME: better way to set this?
 
 ## Manual install
 [poetry](https://python-poetry.org/) is used for dependency management. Follow the install guide for your system:

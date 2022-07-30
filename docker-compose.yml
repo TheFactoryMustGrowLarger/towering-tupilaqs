@@ -8,9 +8,9 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      - app
+      - python_app
 
-  app:
+  python_app:
     image: python:3.10
     build: .
     volumes:
