@@ -4,8 +4,6 @@ services:
   frontend:
     image: node:16.16
     build: site/
-    volumes:
-      - ./site:/code/site
     command: npm start
     ports:
       - 3000:3000
