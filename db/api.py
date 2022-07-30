@@ -1,7 +1,7 @@
 # standard library imports
 import logging
 import random
-from uuid import uuid1
+from uuid import uuid4
 
 # third party imports
 from psycopg import Connection, connect, errors
@@ -10,7 +10,7 @@ from psycopg.rows import class_row
 # This project
 from db.db_config.config import config
 from db.utils.db_classes import (
-    Combined, Question, User, UserCA, UserIA, UserSQ
+    Combined, Question, User, UserCA, UserIA, UserSQ, UserSV
 )
 from db.utils.db_tables import (
     create_questions_table, create_users_table, creater_answers_table
@@ -77,7 +77,7 @@ def insert_question(
     """
     # FIXME: Can this updated to check for duplicate question text?
     # Not sure if it should be rejected or allowed to update.
-    unique_id = uuid1()
+    unique_id = uuid4()
     question = Question(txt=question,
                         title=title,
                         expl=expl,
@@ -246,15 +246,32 @@ def update_question_difficulty(uuid: str, diff: int) -> bool:
             return True
 
 
-def update_question_votes(uuid: str, votes: int) -> bool:
+def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add') -> int:
     """**Update QUESTION `VOTES`.**
 
-    :param uuid: Needs to be in string format for comparison
-    :param votes:
-    :return:
+    :param question_uuid: Needs to be in string format for comparison
+    :param votes: Either 'add' or 'sub' / Add or Subtract
+    :return: the updated number of votes
     """
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
+            current_votes = get_single_question(question_uuid).votes
+            vote_success = update_user_sv_up_by_uuid(user_uuid, sv=question_uuid)
+            logger.info('update_question_votes(%s, %s, %s). Current votes %d, vote_success = %s',
+                        question_uuid, user_uuid, votes, current_votes, vote_success)
+            # Has the user already voted?
+            # FIXME: Support downvote, maybe only as a 'remove' upvote?
+            if vote_success is False:
+                return current_votes
+
+            new_votes = 0
+            if votes == 'add':
+                new_votes = current_votes + 1
+            elif votes == 'sub' and current_votes > 0:
+                new_votes = current_votes - 1
+            else:
+                new_votes = current_votes
+
             cur.execute(
                 """
                 UPDATE
@@ -264,11 +281,11 @@ def update_question_votes(uuid: str, votes: int) -> bool:
                 WHERE
                     ident = %(ident)s
             """, {
-                    'votes': votes,
-                    'ident': uuid,
+                    'votes': new_votes,
+                    'ident': question_uuid,
                 }
             )
-            return True
+            return new_votes
 
 
 def update_answer_text(uuid: str, text: str) -> bool:
@@ -303,9 +320,10 @@ def update_user_ca_by_uuid(uuid: str, ca: str) -> bool:
     :param ca:
     :return:
     """
+    logger.debug('Adding to correct answer list for user %s: %s', uuid, ca)
+
     # Add delimiter
     ca = ', ' + ca  # HACK: Better to skip this if correct_answers is empty
-
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -331,9 +349,10 @@ def update_user_ia_by_uuid(uuid: str, ia: str) -> bool:
     :param ia:
     :return:
     """
+    logger.debug('Adding to incorrect answer list for user %s: %s', uuid, ia)
+
     # Add delimiter
     ia = ', ' + ia  # HACK: Better to skip this if correct_answers is empty
-
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -374,6 +393,52 @@ def update_user_sq_by_uuid(uuid: str, sq: str) -> bool:
                     ident = %(uuid)s
             """, {
                     'sq': sq,
+                    'uuid': uuid,
+                }
+            )
+            return True
+
+
+def update_user_sv_up_by_uuid(uuid: str, sv: str) -> bool:
+    """**Update users `submitted add votes` with their `uuid`**...
+
+    :param uuid:
+    :param sv: question the user has voted up
+    :returns True if question was upvoted and False if the question was already upvoted.
+    """
+    with __conn_singleton() as conn:
+        with conn.cursor(row_factory=class_row(UserSV)) as cur:
+            user_sv = cur.execute(
+                """
+            SELECT
+                submitted_add_votes
+            FROM
+                users
+            WHERE
+                ident = %(uuid)s
+                """, {
+                    'uuid': uuid,
+                }
+            ).fetchone()
+
+            already_voted_up = user_sv.as_list('submitted_add_votes')
+            logger.debug('already_voted_up by %s: %s', uuid, already_voted_up)
+            if sv in already_voted_up:
+                return False
+
+        with conn.cursor() as cur:
+            # Add delimiter
+            sv = ', ' + sv  # HACK: Better to skip this if submitted_questions is empty
+            cur.execute(
+                """
+                UPDATE
+                    users
+                SET
+                    submitted_add_votes = CONCAT(submitted_add_votes, %(sv)s::text)
+                WHERE
+                    ident = %(uuid)s
+            """, {
+                    'sv': sv,
                     'uuid': uuid,
                 }
             )
@@ -503,8 +568,8 @@ def get_ca_by_uuid(uuid: str) -> list[Question]:
         ).fetchone()
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
-        ca = list(user_ca.correct_answers.split(', '))  # Split correct answers from STR into a tuple
-        ca = list(filter(lambda x: x != '', ca))  # remove empty items
+
+        ca = user_ca.as_list('correct_answers')
         logger.debug('get_ca_by_uuid, correct answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
             """
@@ -541,8 +606,8 @@ def get_ia_by_uuid(uuid: str) -> list[Question]:
         ).fetchone()
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
-        ca = list(user_ca.incorrect_answers.split(', '))  # Split incorrect answers from STR into a tuple
-        ca = list(filter(lambda x: x != '', ca))  # remove empty items
+        ca = user_ca.as_list('incorrect_answers')
+
         logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
             """
@@ -580,10 +645,8 @@ def get_sq_by_uuid(uuid: str) -> list[Question]:
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
         ca = list()
-        if user_ca.submitted_questions is not None:
-            ca.extend(user_ca.submitted_questions.split(', '))  # Split incorrect answers from STR into a tuple
+        ca.extend(user_ca.as_list('submitted_questions'))
 
-        ca = list(filter(lambda x: x != '', ca))  # remove empty items
         logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
         all_questions = cur.execute(
             """
@@ -601,6 +664,7 @@ def get_sq_by_uuid(uuid: str) -> list[Question]:
 def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
     """**Returns a new question for player, ensuring it has not been answered before**...
 
+    :param desc:
     :param uuid: User uuid aka ident
     :return:
 
@@ -615,12 +679,7 @@ def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
         user_ca = cur.execute(
             """
             SELECT
-                id,
-                user_name,
-                correct_answers,
-                incorrect_answers,
-                submitted_questions,
-                ident
+                *
             FROM
                 users
             WHERE
@@ -632,10 +691,8 @@ def get_new_question_for_user(uuid: str, desc: bool = True) -> Question:
         cur.close()
 
         answers = list()
-        answers.extend(user_ca.correct_answers.split(', '))  # Split correct answers from STR into a tuple
-        answers.extend(user_ca.incorrect_answers.split(', '))  # Split correct answers from STR into a tuple
-
-        answers = list(filter(lambda x: x != '', answers))  # remove empty items
+        answers.extend(user_ca.as_list('correct_answers'))
+        answers.extend(user_ca.as_list('incorrect_answers'))
 
         logger.debug('get_new_question_for_user, answers = %d: %s', len(answers), answers)
 
@@ -678,7 +735,7 @@ def get_ca_by_name(user_name: str) -> list[Question]:
         ).fetchone()
         cur.close()
         cur = conn.cursor(row_factory=class_row(Question))
-        ca = list(user_ca.correct_answers.split(', '))  # Split correct answers from STR into a tuple
+        ca = user_ca.as_list('correct_answers')
         results = cur.execute(
             """
             SELECT
@@ -692,25 +749,46 @@ def get_ca_by_name(user_name: str) -> list[Question]:
         return [result for result in results if result.ident in ca]
 
 
-def add_user(user_name: str) -> str:
+def add_user(user_name: str, password: str) -> str or bool:
     """**Add a new user to the database.**
 
+    :param password:
     :param user_name: it's a username
     :return: unique_uuid of the added user
     """
-    unique_id = uuid1()
+    unique_id = uuid4()
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
                 INSERT INTO
-                    users (USER_NAME, CORRECT_ANSWERS, IDENT)
+                    users (
+                    USER_NAME,
+                    PASSWORD,
+                    CORRECT_ANSWERS,
+                    INCORRECT_ANSWERS,
+                    SUBMITTED_QUESTIONS,
+                    SUBMITTED_ADD_VOTES,
+                    IDENT
+                    )
                 VALUES
-                    ( %(user_name)s, %(correct_answers)s, %(ident)s )
+                    (
+                    %(user_name)s,
+                    %(password)s,
+                    %(correct_answers)s,
+                    %(incorrect_answers)s,
+                    %(submitted_questions)s,
+                    %(submitted_add_votes)s,
+                    %(ident)s
+                    )
 
             """, {
                     'user_name': user_name,
+                    'password': password,
                     'correct_answers': "",
+                    'incorrect_answers': "",
+                    'submitted_questions': "",
+                    'submitted_add_votes': "",
                     'ident': unique_id,
                 }
             )
@@ -774,12 +852,7 @@ def get_user_by_uuid(uuid: str) -> User:
         results = cur.execute(
             """
             SELECT
-                id,
-                user_name,
-                correct_answers,
-                incorrect_answers,
-                submitted_questions,
-                ident
+                *
             FROM
                 users
             WHERE
@@ -791,45 +864,52 @@ def get_user_by_uuid(uuid: str) -> User:
         return results
 
 
-def get_user_by_name(user_name: str) -> User:
+def get_user_by_name(u_name: str) -> User or None:
     """Get User by username"""
     with __conn_singleton() as conn:
-        cur = conn.cursor(row_factory=class_row(User))
-        results = cur.execute(
-            """
-            SELECT
-                id,
-                user_name,
-                correct_answers,
-                incorrect_answers,
-                submitted_questions,
-                ident
-            FROM
-                users
-            WHERE
-                user_name = %(user_name)s
-        """, {
-                'user_name': user_name,
-            }
-        ).fetchone()
-        return results
+        with conn.cursor(row_factory=class_row(User)) as cur:
+            sql = "select * from users where user_name = %s"
+            results = cur.execute(sql, (u_name,)).fetchone()
+            logger.info("get_user results: %s", results)
+            if results is not None:
+                return results
+            return None
+
+
+def check_password(user_name: str, password: str) -> bool:
+    """**Checks password**...
+
+    :param password:
+    :param user_name:
+    :return:
+    """
+    with __conn_singleton() as conn:
+        with conn.cursor(row_factory=class_row(User)) as cur:
+            sql = "select * from users where user_name = %s"
+            results = cur.execute(sql, (user_name,)).fetchone()
+            if results is not None and results.password == password:
+                return True
+            return False
 
 
 if __name__ == '__main__':
     from utilites.logger_utility import setup_logger
+
     setup_logger()
 
     initiate_database()
 
     for i in range(1, 20):
-        print(insert_question(
-            question=f"question{i}",
-            answer=f"answer{i}",
-            title=f"title{i}",
-            expl=f"expl{i}",
-            votes=random.randrange(1, 100),
-            diff=random.randrange(1, 5)
-        ))
+        print(
+            insert_question(
+                question=f"question{i}",
+                answer=f"answer{i}",
+                title=f"title{i}",
+                expl=f"expl{i}",
+                votes=random.randrange(1, 100),
+                diff=random.randrange(1, 5)
+            )
+        )
         print(add_user(user_name=f"username{i}"))
 
     print(get_single_question_by_votes())
@@ -847,7 +927,7 @@ if __name__ == '__main__':
         update_user_ca_by_uuid(user_id, ca=q.ident)
 
     start = number_of_correct_questions
-    end = number_of_correct_questions+number_of_incorrect_questions
+    end = number_of_correct_questions + number_of_incorrect_questions
     for q in questions[start:end]:
         update_user_ia_by_uuid(user_id, ia=q.ident)
 
@@ -884,6 +964,26 @@ if __name__ == '__main__':
 
     submitted = get_sq_by_uuid(user_id)
     assert len(submitted) == 2, 'expected length 2, got %d %s' % (len(submitted), submitted)
+
+    # Test voted up questions
+    q = questions[0]
+    update_success = update_user_sv_up_by_uuid(user_id, sv=q.ident)
+    assert update_success is True
+
+    update_success = update_user_sv_up_by_uuid(user_id, sv=q.ident)
+    assert update_success is False, 'Already added, not did expect this to work the second time around'
+
+    user_id = get_user_by_name('username1').ident
+    user_id2 = get_user_by_name('username2').ident
+    print('USER id 1', user_id)
+    print('USER id 2', user_id2)
+
+    update_question_votes(question_uuid=q.ident,
+                          user_uuid=user_id2, votes='add')
+
+    # FIXME:
+    # update_question_votes(question_uuid=q.ident,
+    #                       user_uuid=user_id, votes='sub')
 
     # print(delete_question("0a19adb5-0a10-11ed-a7ee-f6aec268b9bd"))
     #

@@ -26,6 +26,15 @@ body {
     .debug-color{
       color: red;
     }
+    .errors{
+      display: flex;
+      justify-content: center;
+      p{
+        color: red;
+        font-weight: bold;
+        font-style: italic;
+      }
+    }
     .main-title{
       font-style: italic;
       font-weight: bold;
@@ -59,12 +68,6 @@ body {
       margin-top: 40px;
       gap: 15px;
       align-content: center;
-      .error{
-        color: red;
-        font-weight: bold;
-        font-style: italic;
-        justify-content: center;
-      }
       &.registration{
         justify-content: center;
         align-items: center;

@@ -19,6 +19,7 @@
     "ace-builds": "^1.8.1",
     "axios": "^0.26.1",
     "babel-plugin-macros": "^3.1.0",
+    "crypto-js": "^4.1.1",
     "font-awesome": "^4.7.0",
     "framer-motion": "^6.3.16",
     "install": "^0.13.0",
