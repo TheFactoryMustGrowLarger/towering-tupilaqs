@@ -35,6 +35,17 @@ const debugMessage = (type, data) => {
     return `${date} <> tupilaqs <> DEBUG <> ${type} - ${JSON.stringify(data)}`;
 }
 
+const NotFound = () => {
+    return (
+        <div className="box" style={{padding: "5px"}}>
+            404 PAGE NOT FOUND
+            <button className="bb-button" style={{marginTop: "10px"}}>
+                    <Link to="/">Go home, youre durnk.</Link>
+            </button>
+        </div>
+    )
+}
+
 /**
  * @description CHANGE ME
  *
@@ -84,8 +95,8 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
     const CheckQuestionField = () => {
         if (NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== "") {
                 const request = {
-                    user: userName,
-                    password: sha256(userPassword),
+                    user_name: userName,
+                    password: sha256(userPassword).toString(),
                     question: NewQuestionText,
                     correct_answer: CorrectAnswer,
                     new_question_title: NewQuestionTitle,
@@ -99,16 +110,37 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
     return (
         <div>
             <div className="inputs registration">
-                <input type="text" value={userName} onChange={e => setUserName(e.target.value)} className="input-base" id="itemID" placeholder="Username: "/>
-                <input type="text" value={userPassword} onChange={e => setUserPassword(e.target.value)} className="input-base" id="itemID" placeholder="Password: "/>
+                <input type="text"
+                       value={userName}
+                       onChange={e => setUserName(e.target.value)}
+                       className="input-base" id="itemID" placeholder="Username: "/>
+                <input type="text"
+                       value={userPassword}
+                       onChange={e => setUserPassword(e.target.value)}
+                       className="input-base" id="itemID" placeholder="Password: "/>
             </div>
-            <Link to={userName && userPassword ? "/categories" : ""}><button onClick={checkFields} className="bb-button start-button">New Game</button></Link>
+
+            <Link to={userName && userPassword ? "/categories" : ""}>
+                <button onClick={checkFields} className="bb-button start-button">New Game</button>
+            </Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
-                <input type="text" value={NewQuestionText} onChange={e => SetNewQuestionText(e.target.value)} className="input-base" id="newQuestionText" placeholder="New Question: "/>
-                <input type="text" value={CorrectAnswer} onChange={e => SetCorrectAnswer((e.target.value))} className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
-                <input type="text" value={NewQuestionTitle} onChange={e => SetNewQuestionTitle((e.target.value))} className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
-                <input type="text" value={NewQuestionExplanation} onChange={e => SetNewQuestionExplanation((e.target.value))} className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
+                <input type="text"
+                       value={NewQuestionText}
+                       onChange={e => SetNewQuestionText(e.target.value)}
+                       className="input-base" id="newQuestionText" placeholder="New Question: "/>
+                <input type="text"
+                       value={CorrectAnswer}
+                       onChange={e => SetCorrectAnswer((e.target.value))}
+                       className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
+                <input type="text"
+                       value={NewQuestionTitle}
+                       onChange={e => SetNewQuestionTitle((e.target.value))}
+                       className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
+                <input type="text"
+                       value={NewQuestionExplanation}
+                       onChange={e => SetNewQuestionExplanation((e.target.value))}
+                       className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
                 <button className="bb-button small-height"  onClick={(e) => add_new_question(e)}>Send</button>
 
             </div>
@@ -137,7 +169,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {Object} singleQuestion
  * @param {String} singleQuestion.txt - The question
  * @param {String} singleQuestion.title - Title
- * @param {String} singleQuestion.expl - For cheating
  * @param {Number} singleQuestion.difficulty - How difficulty the question is
  * @param {Number} singleQuestion.votes - Amount of votes
  * @param {String} singleQuestion.ident - identifier
@@ -187,8 +218,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         const data = {
             'user_name': userName,
             'password': sha256(userPassword).toString(),
-	    'question_uuid': singleQuestion?.ident,
-	    'user_answer': guess
+	        'question_uuid': singleQuestion?.ident,
+	        'user_answer': guess
         }
         webSocket?.send(createMessage('answered_question', data));
     }
@@ -197,8 +228,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         e.preventDefault();
 
         const data = {
-	    'user_name': userName,
-	    'password': sha256(userPassword).toString(),
+	        'user_name': userName,
+	        'password': sha256(userPassword).toString(),
             'question_uuid': singleQuestion?.ident,
             'vote': vote,
         }
@@ -305,7 +336,7 @@ function MyCoolCodeBlock({ code, language }) {
 function App() {
     const socketURL = useRef('ws://localhost:8000/quiz');
     const ws = useRef(null);
-    const [token, setToken] = useState('');
+    //const [token, setToken] = useState('');
     const [error, setError] = useState('');
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
@@ -321,7 +352,7 @@ function App() {
 
         ws.current.onopen = () => {
             console.log('Websocket opened. URL: ', socketURL.current);
-            ws.current?.send(JSON.stringify({'type': 'token_pls'}));
+            // ws.current?.send(JSON.stringify({'type': 'token_pls'}));
         }
         ws.current.onclose = () => {
             console.log('Websocket closed. URL: ', socketURL.current);
@@ -332,27 +363,28 @@ function App() {
             const type = j_obj.type;
             const data = j_obj.data;
             switch (type) {
-                case 'auth':
-                    setToken(data.token);
-                    break;
+                // case 'auth':
+                //     setToken(data.token);
+                //     break;
                 case 'return':
                     console.log(debugMessage(type, data));
                     setWSMessage(data);
                     break;
                 case 'serve_question':
                     console.log(debugMessage(type, JSON.parse(data)));
-                    const d = JSON.parse(data);
-                    if (Object.keys(d).includes('error')) {
-                        setError(d.error);
-                        break;
-                    }
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
-		            setExplanation('');
+                    setExplanation('');
+                    break;
+                case 'error':
+                    if (Object.keys(data).includes('message')) {
+                        setError(data.message);
+                        break;
+                    }
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
-		            setExplanation(data)
+                    setExplanation(data)
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
@@ -378,7 +410,7 @@ function App() {
         questions: questions,
         setQuestions: setQuestions,
         getExplanation: getExplanation,
-	    getVotes: getVotes,
+        getVotes: getVotes,
         setExplanation: setExplanation,
         singleQuestion: singleQuestion,
         setSQuestion: setSQuestion,
@@ -392,8 +424,9 @@ function App() {
             <h1 className="main-title">WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
             <h1 className="main-title">{wsMessage}</h1>
             <Routes>
-                <Route path="/" element={<LandingPage{...propsPackage}/>}/>
-                <Route path="/categories" element={<Box {...propsPackage} />}/>
+                <Route exact path="/" element={<LandingPage{...propsPackage}/>}/>
+                <Route exact path="/categories" element={<Box {...propsPackage} />}/>
+                <Route path="*" element={<NotFound/>}/>
             </Routes>
 	    </div>
 	</BrowserRouter>
