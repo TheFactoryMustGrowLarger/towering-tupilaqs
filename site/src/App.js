@@ -372,14 +372,15 @@ function App() {
                     break;
                 case 'serve_question':
                     console.log(debugMessage(type, JSON.parse(data)));
-                    const d = JSON.parse(data);
-                    if (Object.keys(d).includes('error')) {
-                        setError(d.error);
-                        break;
-                    }
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
                     setExplanation('');
+                    break;
+                case 'error':
+                    if (Object.keys(data).includes('message')) {
+                        setError(data.message);
+                        break;
+                    }
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
