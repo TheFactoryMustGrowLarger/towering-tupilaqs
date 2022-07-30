@@ -87,13 +87,14 @@ def process_new_question(user_uuid, event) -> str:
 def process_serve_new_question(user_uuid, event) -> dict:
     """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
     try:
-        result = db.api.get_new_question_for_user(user_uuid)
-        result = result.__dict__
+        question = db.api.get_new_question_for_user(user_uuid)
+        result = {'txt': question.txt,
+                  'title': question.title,
+                  'votes': question.votes,
+                  'ident': question.ident}
     except IndexError:
-        default = 'You have answered all questions, add more to the database!'
-        result = {'txt': default,
-                  'title': default,
-                  'expl': default,
+        result = {'txt': '',
+                  'title': 'You have answered all questions, add more to the database!',
                   'votes': 0,
                   'ident': 'INVALID'}
 

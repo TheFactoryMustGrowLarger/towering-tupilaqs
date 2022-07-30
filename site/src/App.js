@@ -137,7 +137,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {Object} singleQuestion
  * @param {String} singleQuestion.txt - The question
  * @param {String} singleQuestion.title - Title
- * @param {String} singleQuestion.expl - For cheating
  * @param {Number} singleQuestion.difficulty - How difficulty the question is
  * @param {Number} singleQuestion.votes - Amount of votes
  * @param {String} singleQuestion.ident - identifier
@@ -348,11 +347,11 @@ function App() {
                     }
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
-		            setExplanation('');
+                    setExplanation('');
                     break;
                 case 'answered_question_feedback':
                     console.log(debugMessage(type, data));
-		            setExplanation(data)
+                    setExplanation(data)
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
@@ -378,7 +377,7 @@ function App() {
         questions: questions,
         setQuestions: setQuestions,
         getExplanation: getExplanation,
-	    getVotes: getVotes,
+        getVotes: getVotes,
         setExplanation: setExplanation,
         singleQuestion: singleQuestion,
         setSQuestion: setSQuestion,
