@@ -900,8 +900,13 @@ def check_password(user_name: str, password: str) -> bool:
         with conn.cursor(row_factory=class_row(User)) as cur:
             sql = "select * from users where user_name = %s"
             results = cur.execute(sql, (user_name,)).fetchone()
-            if results is not None and results.password == password:
-                return True
+
+            if results is not None:
+                password_match = results.password == password
+                logger.debug('password check %s == %s: %s', results.password, password,
+                             password_match)
+                return password_match
+
             return False
 
 

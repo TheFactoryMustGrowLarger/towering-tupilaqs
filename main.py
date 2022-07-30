@@ -150,7 +150,7 @@ def process_vote_question(user_uuid, event) -> str:
 async def websocket_echo(
         websocket: WebSocket,
 ):
-    """Handle all the shizz"""
+    """Handle all requests from frontend"""
     await websocket.accept()
     while True:
         try:

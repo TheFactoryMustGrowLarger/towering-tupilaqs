@@ -84,8 +84,8 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
     const CheckQuestionField = () => {
         if (NewQuestionText && NewQuestionTitle && CorrectAnswer && NewQuestionExplanation !== "") {
                 const request = {
-                    user: userName,
-                    password: sha256(userPassword),
+                    user_name: userName,
+                    password: sha256(userPassword).toString(),
                     question: NewQuestionText,
                     correct_answer: CorrectAnswer,
                     new_question_title: NewQuestionTitle,
