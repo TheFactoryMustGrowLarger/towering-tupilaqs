@@ -2,7 +2,6 @@
 
 - Nicer frontend (Assigned to Hels15)
 - should probably not clear the database every time the program runs
-- basic password check to avoid two people using the same username
 - Support difficulty
 - Support showing score (upvotes) for current user submitted questions
 
