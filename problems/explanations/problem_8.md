@@ -1,5 +1,5 @@
-The has a bug! It does not consider dashes while it does not specify this in the description!
-Of course we could correct it by specifying this particularity in the DocString, or we could implement that in the code.
+The code has a bug! It does not consider dashes while this is not specified in the description!
+Of course, we could correct it by specifying this particularity in the DocString, or we could implement that in the code.
 #### Corrected code
 ```
 36    else:

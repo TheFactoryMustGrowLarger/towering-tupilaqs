@@ -1,11 +1,11 @@
 def count_letter(number):
-    """This function counts how many letters are used in a number.
+    """This function counts how many letters a number contains.
 
     Examples:
     count_letter(11) = 6
-    because "eleven" contains 6 letters.
+    because "eleven" contains six letters.
     count_letter(40) = 6
-    because "forty" contains 5 letters.
+    because "forty" contains five letters.
     The function does not consider spaces.
     """
     number = str(number)

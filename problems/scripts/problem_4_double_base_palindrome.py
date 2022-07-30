@@ -1,5 +1,5 @@
 def is_double_base_palindrome(number):
-    """The function assesses whether a number is a palindrome both in base 10 and 2."""
+    """The function assesses whether a number is a palindrome in base ten and base two."""
     number_in_base_2 = __to_base_2(number)
     return __is_palindrome(number) and __is_palindrome(number_in_base_2)
 

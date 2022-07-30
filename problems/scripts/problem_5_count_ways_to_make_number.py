@@ -1,5 +1,5 @@
 def count_ways_to_make_number(number_to_make, *available_numbers):
-    """The following counts the number of possible ways to make a determined number using only available numbers.
+    """The following counts the number of possible ways to make a certain number using only available numbers.
 
     Example:
     number_to_make = 5 available_numbers = [1,2,3]

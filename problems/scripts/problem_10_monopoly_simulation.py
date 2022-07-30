@@ -16,11 +16,11 @@ class __monopoly_probabilities():
         """It calculates the probability of finishing at a particular land after a roll through a Montecarlo simulation.
 
         Monopoly has 40 squares called lands (we enumerate them starting from 0),
-        and the players move around them using two dices.
-        You can find a Monopoly board at this link, you should need it:
+        and the players move around them using two dice.
+        You can find a Monopoly board at this link, it will be helpful:
         https://c8.alamy.com/comp/BF7EFX/monopoly-board-game-BF7EFX.jpg
 
-        Without extra variables, the task of this function would be easy but Monopoly has some rules that
+        Without extra variables, the task of this function would be easy if Monopoly didn't have some rules that
         make this harder:
         When you go on land 30 you always finish at land 10.
         When you go on Community Chest(lands 2, 17, 23) you draw a card, 2/16 cards will move you:
