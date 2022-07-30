@@ -110,16 +110,37 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
     return (
         <div>
             <div className="inputs registration">
-                <input type="text" value={userName} onChange={e => setUserName(e.target.value)} className="input-base" id="itemID" placeholder="Username: "/>
-                <input type="text" value={userPassword} onChange={e => setUserPassword(e.target.value)} className="input-base" id="itemID" placeholder="Password: "/>
+                <input type="text"
+                       value={userName}
+                       onChange={e => setUserName(e.target.value)}
+                       className="input-base" id="itemID" placeholder="Username: "/>
+                <input type="text"
+                       value={userPassword}
+                       onChange={e => setUserPassword(e.target.value)}
+                       className="input-base" id="itemID" placeholder="Password: "/>
             </div>
-            <Link to={userName && userPassword ? "/categories" : ""}><button onClick={checkFields} className="bb-button start-button">New Game</button></Link>
+
+            <Link to={userName && userPassword ? "/categories" : ""}>
+                <button onClick={checkFields} className="bb-button start-button">New Game</button>
+            </Link>
             <h1 className="main-title center">Add custom questions </h1>
             <div className="inputs">
-                <input type="text" value={NewQuestionText} onChange={e => SetNewQuestionText(e.target.value)} className="input-base" id="newQuestionText" placeholder="New Question: "/>
-                <input type="text" value={CorrectAnswer} onChange={e => SetCorrectAnswer((e.target.value))} className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
-                <input type="text" value={NewQuestionTitle} onChange={e => SetNewQuestionTitle((e.target.value))} className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
-                <input type="text" value={NewQuestionExplanation} onChange={e => SetNewQuestionExplanation((e.target.value))} className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
+                <input type="text"
+                       value={NewQuestionText}
+                       onChange={e => SetNewQuestionText(e.target.value)}
+                       className="input-base" id="newQuestionText" placeholder="New Question: "/>
+                <input type="text"
+                       value={CorrectAnswer}
+                       onChange={e => SetCorrectAnswer((e.target.value))}
+                       className="input-base" id="correctAnswer" placeholder='"Bug" or "feature":'/>
+                <input type="text"
+                       value={NewQuestionTitle}
+                       onChange={e => SetNewQuestionTitle((e.target.value))}
+                       className="input-base" id="newQuestionTitle" placeholder="Question title:"/>
+                <input type="text"
+                       value={NewQuestionExplanation}
+                       onChange={e => SetNewQuestionExplanation((e.target.value))}
+                       className="input-base" id="newQuestionExplanation" placeholder="Question explanation:"/>
                 <button className="bb-button small-height"  onClick={(e) => add_new_question(e)}>Send</button>
 
             </div>
@@ -197,8 +218,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         const data = {
             'user_name': userName,
             'password': sha256(userPassword).toString(),
-	    'question_uuid': singleQuestion?.ident,
-	    'user_answer': guess
+	        'question_uuid': singleQuestion?.ident,
+	        'user_answer': guess
         }
         webSocket?.send(createMessage('answered_question', data));
     }
@@ -207,8 +228,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         e.preventDefault();
 
         const data = {
-	    'user_name': userName,
-	    'password': sha256(userPassword).toString(),
+	        'user_name': userName,
+	        'password': sha256(userPassword).toString(),
             'question_uuid': singleQuestion?.ident,
             'vote': vote,
         }
