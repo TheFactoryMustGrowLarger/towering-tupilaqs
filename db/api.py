@@ -918,69 +918,6 @@ if __name__ == '__main__':
     print(get_ca_by_name("username1"))
 
     user_id = get_user_by_name('username1').ident
-    questions = get_all_questions()
-    assert len(questions) == 10
-
-    # User answered correctly
-    number_of_correct_questions = 5
-    number_of_incorrect_questions = 3
-    for q in questions[:number_of_correct_questions]:
-        update_user_ca_by_uuid(user_id, ca=q.ident)
-
-    start = number_of_correct_questions
-    end = number_of_correct_questions + number_of_incorrect_questions
-    for q in questions[start:end]:
-        update_user_ia_by_uuid(user_id, ia=q.ident)
-
-    correct_answers = get_ca_by_uuid(user_id)
-    incorrect_answers = get_ia_by_uuid(user_id)
-
-    expected = 'expected length %d, got %s' % (number_of_correct_questions, len(correct_answers))
-    assert len(correct_answers) == number_of_correct_questions, expected
-
-    expected = 'expected length %d, got %s' % (number_of_incorrect_questions, len(incorrect_answers))
-    assert len(incorrect_answers) == number_of_incorrect_questions, expected
-
-    correct_answers_ident = list()
-    incorrect_answers_ident = list()
-    for item in correct_answers:
-        print('Correct answers', item.txt)
-        correct_answers_ident.append(item.ident)
-
-    for item in incorrect_answers:
-        incorrect_answers_ident.append(item.ident)
-        print('Incorrect answers', item.txt)
-
-    q = get_new_question_for_user(user_id)
-    assert q.ident not in correct_answers_ident, 'vops, wanted a new question got %s' % q.ident
-    assert q.ident not in incorrect_answers_ident, 'vops, wanted a new question got %s' % q.ident
-    print('New question', q)
-
-    # Test submitted questions
-    assert len(get_sq_by_uuid(user_id)) == 0
-
-    number_of_submitted_questions = 2
-    for q in questions[:number_of_submitted_questions]:
-        update_user_sq_by_uuid(user_id, sq=q.ident)
-
-    submitted = get_sq_by_uuid(user_id)
-    assert len(submitted) == 2, 'expected length 2, got %d %s' % (len(submitted), submitted)
-
-    # Test voted up questions
-    q = questions[0]
-    update_success = update_user_sv_up_by_uuid(user_id, sv=q.ident)
-    assert update_success is True
-
-    update_success = update_user_sv_up_by_uuid(user_id, sv=q.ident)
-    assert update_success is False, 'Already added, not did expect this to work the second time around'
-
-    user_id = get_user_by_name('username1').ident
-    user_id2 = get_user_by_name('username2').ident
-    print('USER id 1', user_id)
-    print('USER id 2', user_id2)
-
-    update_question_votes(question_uuid=q.ident,
-                          user_uuid=user_id2, votes='add')
 
     # FIXME:
     # update_question_votes(question_uuid=q.ident,
