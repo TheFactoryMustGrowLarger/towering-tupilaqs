@@ -1,5 +1,5 @@
 import json
-import secrets
+# import secrets
 from typing import Union
 
 import psycopg
@@ -184,16 +184,17 @@ async def websocket_echo(
                 return
 
         event_type = event['type']
-        if event_type == 'token_pls':
-            await websocket.send_json(
-                {
-                    'type': 'auth',
-                    'data': {
-                        'token': secrets.token_urlsafe()
-                    }
-                }
-            )
-        elif event_type == 'insert_new_question':
+        # if event_type == 'token_pls':
+        #     await websocket.send_json(
+        #         {
+        #             'type': 'auth',
+        #             'data': {
+        #                 'token': secrets.token_urlsafe()
+        #             }
+        #         }
+        #     )
+        # el
+        if event_type == 'insert_new_question':
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
                 {

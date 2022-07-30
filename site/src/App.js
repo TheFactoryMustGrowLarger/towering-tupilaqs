@@ -336,7 +336,7 @@ function MyCoolCodeBlock({ code, language }) {
 function App() {
     const socketURL = useRef('ws://localhost:8000/quiz');
     const ws = useRef(null);
-    const [token, setToken] = useState('');
+    //const [token, setToken] = useState('');
     const [error, setError] = useState('');
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
@@ -352,7 +352,7 @@ function App() {
 
         ws.current.onopen = () => {
             console.log('Websocket opened. URL: ', socketURL.current);
-            ws.current?.send(JSON.stringify({'type': 'token_pls'}));
+            // ws.current?.send(JSON.stringify({'type': 'token_pls'}));
         }
         ws.current.onclose = () => {
             console.log('Websocket closed. URL: ', socketURL.current);
@@ -363,9 +363,9 @@ function App() {
             const type = j_obj.type;
             const data = j_obj.data;
             switch (type) {
-                case 'auth':
-                    setToken(data.token);
-                    break;
+                // case 'auth':
+                //     setToken(data.token);
+                //     break;
                 case 'return':
                     console.log(debugMessage(type, data));
                     setWSMessage(data);
