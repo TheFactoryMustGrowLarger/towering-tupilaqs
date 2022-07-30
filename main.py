@@ -136,7 +136,7 @@ def process_new_answer(user_uuid, event) -> str:
     return ret
 
 
-def process_vote_question(user_uuid, event) -> str:
+def process_vote_question(user_uuid, event) -> dict[str, int]:
     """Takes in a json event with a user vote and sends to database,
 
     :returns: a dictonary with question_id and current vote.
