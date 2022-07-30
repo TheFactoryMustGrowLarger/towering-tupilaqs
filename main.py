@@ -61,6 +61,8 @@ def process_new_question(user_uuid, event) -> str:
 
     Note: assumes frontend takes care of input sanitization
     """
+    assert user_uuid is not None
+
     # FIXME: add difficulty to event
     difficulty = 0
 
@@ -105,10 +107,7 @@ def process_new_answer(user_uuid, event) -> str:
     :returns: a string containing user feedback (either "Correct!" or "Sorry this was a <Bug/Feature>") and
               answer explanation
     """
-    try:
-        user_uuid = get_or_create_user(event['user_name'], event['password'])
-    except WrongPasswordException as e:
-        return e.error_event
+    assert user_uuid is not None
 
     question_uuid = event['question_uuid']
     user_answer = event['user_answer']
@@ -136,6 +135,7 @@ def process_vote_question(user_uuid, event) -> str:
 
     :returns: a dictonary with question_id and current vote.
     """
+    assert user_uuid is not None
     question_id = event['question_uuid']
     vote = event['vote']
 
@@ -161,10 +161,11 @@ async def websocket_echo(
         logger.debug('quiz-received-data: %s', data)
         event = json.loads(data)
         user_uuid = None
-        if 'passowrd' in event:
+        if 'data' in event and 'password' in event['data']:
             try:
-                user_uuid = get_or_create_user(event['user_name'],
-                                               event['password'])
+                user_uuid = get_or_create_user(event['data']['user_name'],
+                                               event['data']['password'])
+                logger.info('user_uuid %s', user_uuid)
             except WrongPasswordException as e:
                 return e.error_event
 
