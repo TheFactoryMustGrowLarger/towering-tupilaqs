@@ -34,6 +34,16 @@ for script, answer, title, explanation, difficulty in problems_keywords:
                      e, script, answer, title, explanation, difficulty)
 
 
+class WrongPasswordException(Exception):
+    """raised if the password is incorrect"""
+
+    error_event = {'error': 'Wrong password, nice try.'}
+
+
+class InvalidQuestionIDException(Exception):
+    """raised if the question ID is not found in the database, this indicates a bug."""
+
+
 def get_or_create_user(user: str, password: str) -> str:
     """Returns user uuid, if the user does not exist, it will be created"""
     u = db.api.get_user_by_name(user)
@@ -41,18 +51,16 @@ def get_or_create_user(user: str, password: str) -> str:
         if db.api.check_password(user, password):
             return u.ident
         else:
-            return "wrong password"
+            raise WrongPasswordException("wrong password")
     else:
         return db.api.add_user(user, password)
 
 
-def process_new_question(event) -> str:
+def process_new_question(user_uuid, event) -> str:
     """Takes in a json event and extracts fields to go into database
 
     Note: assumes frontend takes care of input sanitization
     """
-    user_uuid = get_or_create_user(event['user_name'], event['password'])
-
     # FIXME: add difficulty to event
     difficulty = 0
 
@@ -74,13 +82,8 @@ def process_new_question(event) -> str:
     return ret
 
 
-def process_serve_new_question(event) -> dict:
+def process_serve_new_question(user_uuid, event) -> dict:
     """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
-    user_uuid = get_or_create_user(event['user_name'], event['password'])
-    if user_uuid.lower() == 'already exists':
-        return {'error': 'Username already exists'}
-    elif user_uuid.lower() == 'wrong password':
-        return {'error': 'Wrong password, nice try.'}
     try:
         result = db.api.get_new_question_for_user(user_uuid)
         result = result.__dict__
@@ -96,15 +99,23 @@ def process_serve_new_question(event) -> dict:
     return result
 
 
-def process_new_answer(event) -> str:
-    """Takes in a json event with a user answer and sends to database"""
-    user_uuid = get_or_create_user(event['user_name'], event['password'])
+def process_new_answer(user_uuid, event) -> str:
+    """Takes in a json event with a user answer and sends to database
+
+    :returns: a string containing user feedback (either "Correct!" or "Sorry this was a <Bug/Feature>") and
+              answer explanation
+    """
+    try:
+        user_uuid = get_or_create_user(event['user_name'], event['password'])
+    except WrongPasswordException as e:
+        return e.error_event
+
     question_uuid = event['question_uuid']
     user_answer = event['user_answer']
 
     question = db.api.get_single_question(question_uuid)
     if question is None:
-        raise Exception('Bug, could not find question corresponding to %s' % question_uuid)
+        raise InvalidQuestionIDException('Bug, could not find question corresponding to %s' % question_uuid)
 
     correct_answer = question.answer
     if user_answer.lower() == correct_answer.lower():
@@ -120,12 +131,11 @@ def process_new_answer(event) -> str:
     return ret
 
 
-def process_vote_question(event) -> str:
+def process_vote_question(user_uuid, event) -> str:
     """Takes in a json event with a user vote and sends to database,
 
     :returns: a dictonary with question_id and current vote.
     """
-    user_uuid = get_or_create_user(event['user_name'])
     question_id = event['question_uuid']
     vote = event['vote']
 
@@ -150,6 +160,14 @@ async def websocket_echo(
 
         logger.debug('quiz-received-data: %s', data)
         event = json.loads(data)
+        user_uuid = None
+        if 'passowrd' in event:
+            try:
+                user_uuid = get_or_create_user(event['user_name'],
+                                               event['password'])
+            except WrongPasswordException as e:
+                return e.error_event
+
         event_type = event['type']
         if event_type == 'token_pls':
             await websocket.send_json(
@@ -161,7 +179,7 @@ async def websocket_echo(
                 }
             )
         elif event_type == 'insert_new_question':
-            a = process_new_question(event=event['data'])
+            a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
                 {
                     'type': 'return',
@@ -169,7 +187,7 @@ async def websocket_echo(
                 }
             )
         elif event_type == 'get_question':
-            ret = process_serve_new_question(event['data'])
+            ret = process_serve_new_question(user_uuid, event['data'])
             await websocket.send_json(
                 {
                     'type': 'serve_question',
@@ -177,7 +195,7 @@ async def websocket_echo(
                 }
             )
         elif event_type == 'answered_question':
-            ret = process_new_answer(event['data'])
+            ret = process_new_answer(user_uuid, event['data'])
             await websocket.send_json(
                 {
                     'type': 'answered_question_feedback',
@@ -185,7 +203,7 @@ async def websocket_echo(
                 }
             )
         elif event_type == 'vote_question':
-            ret = process_vote_question(event['data'])
+            ret = process_vote_question(user_uuid, event['data'])
             await websocket.send_json(
                 {
                     'type': 'vote_feedback',

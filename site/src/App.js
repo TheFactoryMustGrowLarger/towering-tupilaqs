@@ -187,8 +187,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         const data = {
             'user_name': userName,
             'password': sha256(userPassword).toString(),
-	        'question_uuid': singleQuestion?.ident,
-	        'user_answer': guess
+	    'question_uuid': singleQuestion?.ident,
+	    'user_answer': guess
         }
         webSocket?.send(createMessage('answered_question', data));
     }
@@ -197,7 +197,8 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
         e.preventDefault();
 
         const data = {
-	        'user_name': userName,
+	    'user_name': userName,
+	    'password': sha256(userPassword).toString(),
             'question_uuid': singleQuestion?.ident,
             'vote': vote,
         }
