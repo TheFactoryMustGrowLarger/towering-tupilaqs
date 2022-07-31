@@ -13,13 +13,13 @@ from db.utils.db_classes import (
     Combined, Question, User, UserCA, UserIA, UserSQ, UserSV
 )
 from db.utils.db_tables import (
-    create_questions_table, create_users_table, creater_answers_table
+    create_answers_table, create_questions_table, create_users_table
 )
 
 logger = logging.getLogger('tupilaqs.db')
 
 
-class TupilaqsDB():
+class TupilaqsDB:
     """Wrapper around the tupilaqs quiz database"""
 
     def __init__(self, conf=None):
@@ -71,7 +71,7 @@ class TupilaqsDB():
                 cur.execute("DROP TABLE IF EXISTS USERS")
                 cur.execute(create_questions_table)
                 logger.info("Added `questions` table to DB.")
-                cur.execute(creater_answers_table)
+                cur.execute(create_answers_table)
                 logger.info("Added `answers` table to DB.")
                 cur.execute(create_users_table)
                 logger.info("Added `users` table to DB.")
@@ -101,8 +101,8 @@ class TupilaqsDB():
                             expl=expl,
                             difficulty=diff,
                             votes=votes,
-                            id=unique_id,
-                            ident=unique_id)
+                            id=0,
+                            ident=str(unique_id))
 
         with self.__conn_singleton() as conn:
             with conn.cursor() as cur:
@@ -266,6 +266,7 @@ class TupilaqsDB():
                               ) -> int:
         """**Update QUESTION `VOTES`.**
 
+        :param user_uuid:
         :param question_uuid: Needs to be in string format for comparison
         :param votes: Either 'add' or 'sub' / Add or Subtract
         :param new_vote_override: Allows setting a absolute value, ignores votes param. Usefull for testing.
