@@ -1,4 +1,4 @@
-FROM python:3.10 as base
+FROM python:3.10-slim as base
 
 ENV PYTHONFAULTHANDLER=1 \
     PYTHONHASHSEED=random \
@@ -15,7 +15,6 @@ COPY poetry.lock pyproject.toml .dockerignore /code/
 
 RUN /root/.local/bin/poetry install --no-interaction --no-ansi
 
-# FIXME: Confused, seems to completly ignore the .dockerignore file
 COPY . /code
 
 # replace the database.ini file with the docker version
