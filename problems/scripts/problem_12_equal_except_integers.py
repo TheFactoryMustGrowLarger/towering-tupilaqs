@@ -5,7 +5,7 @@ def equal_except_integers(a, b):
     True
     >>> equal_except_integers({'key':1}, {'key':2})
     False
-    >>> equal_v2(1, 2)
+    >>> equal_except_integers(1, 2)
     True
     """
     if isinstance(a, int):
