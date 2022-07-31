@@ -2,16 +2,14 @@ version: '3.1'
 
 services:
   frontend:
-    image: node:16.16
     build: site/
     command: npm start
     ports:
-      - 3000:3000
+      - "3000:3000"
     depends_on:
       - python_app
 
   python_app:
-    image: python:3.10
     build: .
     volumes:
       - .:/code
@@ -20,7 +18,7 @@ services:
     depends_on:
       - db
     ports:
-      - 8000:8000
+      - "8000:8000"
 
   db:
     image: postgres
@@ -31,10 +29,10 @@ services:
       POSTGRES_USER: quiz
       POSTGRES_DB: quiz
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   adminer:
     image: adminer
     restart: always
     ports:
-      - 8080:8080
+      - "8080:8080"
