@@ -174,13 +174,13 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {String} singleQuestion.ident - identifier
  * @param {String} userScore - User score, based on number of correct guesses
  * @param {String} userSubmittedQuestionsCount - Number of questions user has submitted
- * @param {String} userSubmittedQuestionsScore - Number of votes user submitted questions has received
+ * @param {String} userSubmittedQuestionsVotes - Number of votes user submitted questions has received
  *
  * @returns {JSX.Element}
  * @constructor
  */
 const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes,
-               userScore, userSubmittedQuestionsCount, userSubmittedQuestionsScore}) => {
+               userScore, userSubmittedQuestionsCount, userSubmittedQuestionsVotes}) => {
 
     const handleNextQuestions = () => {
         if (userName.length > 0 && userPassword.length > 0) {
@@ -250,7 +250,7 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
                     <li>Username: {userName}</li>
                     <li>Score: {userScore}</li>
                     <li>Number of user submitted questions: {userSubmittedQuestionsCount}</li>
-                    <li>Score of user submitted questions: {userSubmittedQuestionsScore}</li>
+                    <li>Votes for user submitted questions: {userSubmittedQuestionsVotes}</li>
                 </ul>
             </div>
             <div>
@@ -355,7 +355,7 @@ function App() {
     const [userName, setUserName] = useState('');
     const [userScore, setUserScore] = useState('');
     const [userSubmittedQuestionsCount, setUserSubmittedQuestionsCount] = useState('');
-    const [userSubmittedQuestionsScore, setUserSubmittedQuestionsScore] = useState('');
+    const [userSubmittedQuestionsVotes, setUserSubmittedQuestionsVotes] = useState('');
     const [userPassword, setUserPassword] = useState('');
     const [getExplanation, setExplanation] = useState('');
     const [getVotes, setVotes] = useState('0');
@@ -410,7 +410,7 @@ function App() {
                     const data_parsed = JSON.parse(data)
                     setUserScore(data_parsed['user_score'].toString())
                     setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString())
-                    setUserSubmittedQuestionsScore(data_parsed['user_submitted_questions_score'].toString())
+                    setUserSubmittedQuestionsVotes(data_parsed['user_submitted_questions_votes'].toString())
                     break;
 
                 default:
@@ -441,7 +441,7 @@ function App() {
         setError: setError,
         userScore : userScore,
         userSubmittedQuestionsCount : userSubmittedQuestionsCount,
-        userSubmittedQuestionsScore : userSubmittedQuestionsScore
+        userSubmittedQuestionsVotes : userSubmittedQuestionsVotes
     }
 
     return (
