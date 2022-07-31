@@ -31,9 +31,21 @@ def config(filename='database.ini', section="postgresql") -> dict:
 
     if parser.has_section(section):
         params = parser.items(section)
-        for param in params:
-            db[param[0]] = param[1]
+        for key, value in params:
+            # translate boolean true/false
+            if value.lower() == 'true':
+                value = True
+            elif value.lower() == 'false':
+                value = False
+
+            db[key] = value
     else:
         raise Exception('Section {} not found in the {} file.'.format(section, full_filename))
 
     return db
+
+
+if __name__ == '__main__':
+    c = config('database_remote.ini')
+    for key, value in c.items():
+        print(key, type(value), value)

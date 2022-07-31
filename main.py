@@ -8,6 +8,10 @@ from fastapi import Cookie, FastAPI, Query, WebSocket, status
 from db.api import TupilaqsDB
 from utilites.logger_utility import setup_logger
 
+logger = setup_logger()
+app = FastAPI()
+db = TupilaqsDB()
+
 
 def __read_file(file_path):
     with open(file_path, 'r') as file:
@@ -15,12 +19,6 @@ def __read_file(file_path):
     return file_as_string
 
 
-logger = setup_logger()
-app = FastAPI()
-# FIXME: Should only be done once, clears the database
-db = TupilaqsDB()
-
-db.initiate_database()
 problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
                      ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
                      ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1)]

@@ -3,6 +3,7 @@ import random
 import unittest
 
 from db.api import TupilaqsDB
+from db.db_config.config import config
 
 logger = logging.getLogger('tupilaqs.db.test')
 
@@ -12,8 +13,10 @@ class TestDatabase(unittest.TestCase):
 
     def setUp(self):
         """Initialize database with dummy data"""
-        self.db = TupilaqsDB()
-        self.db.initiate_database()
+        conf = config()
+        conf['should_initialize_database'] = True  # No matter what, ensure we clear for testing
+
+        self.db = TupilaqsDB(conf)
         for i in range(1, 20):
             q = self.db.insert_question(
                 question=f"question{i}",

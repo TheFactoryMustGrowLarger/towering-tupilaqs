@@ -22,11 +22,27 @@ logger = logging.getLogger('tupilaqs.db')
 class TupilaqsDB():
     """Wrapper around the tupilaqs quiz database"""
 
+    def __init__(self, conf=None):
+        """Initialize database from config
+
+        :param conf: Optional, defaults to reading configuration from db/db_config/database.ini
+        """
+        if conf is None:
+            self.conf = config()
+        else:
+            self.conf = conf
+
+        if self.conf['should_initialize_database']:
+            self.__initiate_database()
+
     def __conn_singleton(self) -> Connection:
         conn = ""
-        conf = config()
+        conf = self.conf
         try:
-            conn = connect(**conf)
+            conn = connect(host=conf['host'],
+                           dbname=conf['dbname'],
+                           user=conf['user'],
+                           password=conf['password'])
         except errors.ConnectionDoesNotExist as e:
             logger.exception('db connect failed %s', conf)
             print(e)
@@ -35,7 +51,7 @@ class TupilaqsDB():
             raise e
         return conn
 
-    def initiate_database(self) -> None:
+    def __initiate_database(self) -> None:
         """**Initiates database.**
 
         Initiates database with two tables for 'questions' and 'answers'
@@ -917,8 +933,10 @@ if __name__ == '__main__':
 
     setup_logger()
 
-    db = TupilaqsDB()
-    db.initiate_database()
+    conf = config()
+    conf['should_initialize_database'] = True  # No matter what, ensure we clear for testing
+
+    db = TupilaqsDB(conf=conf)
 
     for i in range(1, 20):
         print(
