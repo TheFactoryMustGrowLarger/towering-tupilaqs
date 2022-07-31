@@ -9,7 +9,8 @@ create_questions_table = '''
             VOTES SMALLINT
         )
     '''
-creater_answers_table = '''
+
+create_answers_table = '''
     CREATE TABLE ANSWERS(
         ID SERIAL PRIMARY KEY,
         ANSWER TEXT NOT NULL,
@@ -18,12 +19,6 @@ creater_answers_table = '''
 '''
 
 
-# - So we can (a) check user score and (b) avoid showing the same question again:
-# - CORRECT_ANSWERS - question ids answered correctly
-# - INCORRECT_ANSWERS - question ids answered incorrectly
-# - So we can give points for submitted good questions, keep a list of:
-# - SUBMITTED_QUESTIONS - questions ids the user has submitted
-# - SUBMITTED_ADD_VOTES - question ids the user has voted for, to prevent the user from upvoting multiple times
 create_users_table = '''
     CREATE TABLE USERS(
         ID SERIAL PRIMARY KEY,
