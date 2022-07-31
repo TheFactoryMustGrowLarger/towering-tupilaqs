@@ -1,171 +1,48 @@
 import json
-import random
-import secrets
-from typing import Union
 
-import psycopg
-from fastapi import Cookie, Depends, FastAPI, Query, WebSocket, status
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, WebSocket
 
-import db.api
+from db.api import TupilaqsDB
 from utilites.logger_utility import setup_logger
-
-
-def __read_file(file_path):
-    with open(file_path, 'r') as file:
-        file_as_string = file.read()
-    return file_as_string
-
 
 logger = setup_logger()
 app = FastAPI()
-# FIXME: Should only be done once, clears the database
-db.api.initiate_database()
-problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1.md", 0, 10),
-                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2.md", 0, 10),
-                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3.md", 1, 10),
-                     ("problem_4_double_base_palindrome.py", 'Bug', 'Double base palindrome',
-                      "problem_4_explanation.md", 1, 10),
-                     ("problem_5_count_ways_to_make_number.py", 'Feature',
-                      'Count Ways to make a number', "problem_5.md", 2, 10),
-                     ("problem_6_truncatable_number.py", 'Feature',
-                      'Is it truncatable?', "problem_6.md", 2, 10),
-                     ("problem_7_lychrel_numbers.py", 'Feature',
-                         'Is it Lychrel?', "problem_7.md", 2, 10),
-                     ("problem_8_count_letter.py", 'Bug',
-                         'Count letter of a number?', "problem_8.md", 2, 10),
-                     ("problem_9_amicable_numbers.py", 'Bug',
-                      'Are amicable numbers', "problem_9.md", 2, 10),
-                     ("problem_10_monopoly_simulation.py", 'Feature',
-                      'Monopoly Probabilities', "problem_10.md", 3, 10),
-                     ("problem_11_are_equal.py", 'Bug',
-                      'Are equal?', "problem_11.md", 0, 10),
-                     ("problem_12_equal_except_integers.py", 'Feature',
-                      'integers do the opposite', "problem_12.md", 0, 10)
-                     ]
-
-for script, answer, title, explanation, difficulty in problems_keywords:
-    script = __read_file(f"problems/scripts/{script}")
-    explanation = __read_file(f"problems/explanations/{explanation}")
-    try:
-        db.api.insert_question(script, answer, title, explanation, difficulty)
-    except psycopg.errors.StringDataRightTruncation as e:
-        logger.error('Too long! %s, script=%s, answer=%s, title=%s, explanation=%s, difficulty=%s',
-                     e, script, answer, title, explanation, difficulty)
-
-# FIXME: move to App.js
-html_quiz_solve_page = """
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>WebSocket Quiz - Bug, Feature or Tupilaqs</title>
-    </head>
-    <body>
-        <h1>WebSocket Quiz - Bug, Feature or Tupilaqs</h1>
-        <form action="" onsubmit="solveQuiz(event)">
-            <label>Username: <input type="text" id="itemId" autocomplete="off" value="foo"/></label>
-            <label>Password: <input type="text" id="token" autocomplete="off" value="some-key-token"/></label>
-            <button onclick="connect(event)">Connect</button>
-            <hr>
-            <div id='solveQuestionTitle'></div>
-            <div id='solveQuestionText'></div>
-
-            <div style="display:none;" id='solveQuestionUUID'></div>
-            <label>Answer: <input type="text" id="userAnswer" autocomplete="off"/></label>
-            <div id='answerFeedbackText'></div>
-            <button>Send</button>
-        </form>
-        <ul id='messages'>
-        </ul>
-        <script>
-        console.log("Starting")
-        var ws = null;
-        ws = new WebSocket("ws://localhost:8000/ws")
-        ws.onopen = function(event) {
-            const request = {
-              type: "serve_new_question",
-            };
-            ws.send(JSON.stringify(request))
-          };
-
-        var solve_question_text  = document.getElementById("solveQuestionText")
-        var solve_question_title = document.getElementById("solveQuestionTitle")
-        var answer_feedback_text = document.getElementById("answerFeedbackText")
-        var solve_question_uuid = document.getElementById("solveQuestionUUID")
-        solve_question_text.innerHTML = "This is a question, pretend it is nicely formatted python code"
-
-        function connect(event) {
-          event.preventDefault()
-          var itemId = document.getElementById("itemId")
-          var token = document.getElementById("token")
-          ws = new WebSocket("ws://localhost:8000/solve_quiz/" + itemId.value + "/ws?token=" + token.value);
-          ws.onopen = function(event) {
-            const request = {
-              type: "serve_new_question",
-            };
-            ws.send(JSON.stringify(request))
-          };
-
-          ws.onmessage = function(event) {
-            event.preventDefault()
-            console.log(event.data)
-            const data_parsed = JSON.parse(event.data)
-
-            switch (data_parsed.type) {
-              case "solve_question_text":
-                solve_question_title.innerHTML = data_parsed.title
-                solve_question_text.innerHTML = data_parsed.txt
-                solve_question_uuid.innerHTML = data_parsed.uuid
-                break;
-              case "answer_feedback_text":
-                answer_feedback_text.innerHTML = data_parsed.data
-                break;
-              default:
-                var messages = document.getElementById('messages')
-                var message = document.createElement('li')
-                var content = document.createTextNode(data_parsed.data)
-                message.appendChild(content)
-                messages.appendChild(message)
-            }
-          };
-        }
-
-        function solveQuiz(event) {
-            event.preventDefault()
-            var input = document.getElementById("userAnswer")
-            const response = {
-              type: "new_answer",
-              question_uuid: solve_question_uuid.innerHTML,
-              user_answer: input.value,
-            };
-            ws.send(JSON.stringify(response))
-            input.value = ''
-
-        }
-
-        </script>
-    </body>
-</html>
-"""
+db = TupilaqsDB()
 
 
-def get_or_create_user(user):
+class WrongPasswordException(Exception):
+    """raised if the password is incorrect"""
+
+    def __init__(self, message='Wrong password, try again.'):
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return {'error': self.message}
+
+
+class InvalidQuestionIDException(Exception):
+    """raised if the question ID is not found in the database, this indicates a bug."""
+
+
+def get_or_create_user(user: str, password: str) -> str:
     """Returns user uuid, if the user does not exist, it will be created"""
-    u = db.api.get_user_by_name(user)
+    u = db.get_user_by_name(user)
     if u is not None:
-        user_uuid = u.ident
+        if db.check_password(user, password):
+            return u.ident
+        else:
+            raise WrongPasswordException()
     else:
-        user_uuid = db.api.add_user(user)  # FIXME: password?
-
-    return user_uuid
+        return db.add_user(user, password)
 
 
-def process_new_question(event) -> str:
+def process_new_question(user_uuid, event) -> str:
     """Takes in a json event and extracts fields to go into database
 
     Note: assumes frontend takes care of input sanitization
     """
-    user_uuid = get_or_create_user(event['user'])
+    assert user_uuid is not None
 
     # FIXME: add difficulty to event
     difficulty = 0
@@ -178,166 +55,188 @@ def process_new_question(event) -> str:
 
     logger.info('Inserting %s by user uuid %s', database_insert, user_uuid)
 
-    # FIXME: add question to user_uuid to give user a score for submitting good questions
-    return db.api.insert_question(**database_insert)
+    question = db.insert_question(**database_insert)
 
+    # add question uuid to User, so we know who submitted it and can calculate score based on good questions
+    db.update_user_sq_by_uuid(user_uuid, sq=str(question.ident))
 
-def process_serve_new_question(user, event):
-    """Takes in a json event (content ignored for now) and requests a new question from the database"""
-    # FIXME: avoid showing the same question twice
-    # user_uuid = get_or_create_user(user)
-    result = db.api.get_all_questions()  # FIXME: avoid fetching for all questions
-
-    ret = dict(txt='This is a question, pretend it is nicely formatted',
-               title='Question Title',
-               uuid='Default')
-    # FIXME: Add difficulty
-    if len(result) > 0:
-        combined = random.choice(result)
-        ret = dict(txt=combined.txt,
-                   title=combined.title,
-                   uuid=combined.ident)
-
-    logger.info('serve_new_question -> %s', ret)
+    ret = "Added `{title}` to the database with UUID {unique_id}.".format(title=question.title,
+                                                                          unique_id=question.ident)
     return ret
 
 
-def process_new_answer(user, event):
-    """Takes in a json event with a user answer and sends to database"""
-    # user_uuid = get_or_create_user(user)
+def process_serve_new_question(user_uuid, event) -> dict:
+    """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
+    try:
+        question = db.get_new_question_for_user(user_uuid)
+        result = {'txt': question.txt,
+                  'title': question.title,
+                  'votes': question.votes,
+                  'ident': question.ident}
+    except IndexError:
+        result = {'txt': '',
+                  'title': 'You have answered all questions, add more to the database!',
+                  'votes': 0,
+                  'ident': 'INVALID'}
+
+    logger.info('serving new question %s', result)
+    return result
+
+
+def process_new_answer(user_uuid, event) -> str:
+    """Takes in a json event with a user answer and sends to database
+
+    :returns: a string containing user feedback (either "Correct!" or "Sorry this was a <Bug/Feature>") and
+              answer explanation
+    """
+    assert user_uuid is not None
+
     question_uuid = event['question_uuid']
-
-    question = db.api.get_question(question_uuid)
-    if question is None:
-        raise Exception('Bug, could not find question corresponding to %s' % question_uuid)
-
     user_answer = event['user_answer']
-    correct_answer = question.answer
 
+    question = db.get_single_question(question_uuid)
+    if question is None:
+        raise InvalidQuestionIDException('Bug, could not find question corresponding to %s' % question_uuid)
+
+    correct_answer = question.answer
     if user_answer.lower() == correct_answer.lower():
         ret = 'Correct!'
+        db.update_user_ca_by_uuid(user_uuid, ca=question.ident)
     else:
         ret = 'Sorry, this was a "%s".' % correct_answer
+        db.update_user_ia_by_uuid(user_uuid, ia=question.ident)
 
     ret += '\n%s' % question.expl
 
-    # FIXME: update user, with both correct and incorrect answers
-
-    logger.info('process_new_answer(%s, %s, """%s""") -> %s' % (user, user_answer, question.txt, ret))
+    logger.debug('process_new_answer(%s, %s, """%s""") -> %s' % (user_uuid, user_answer, question.txt, ret))
     return ret
 
 
-@app.get("/solve_quiz")
-async def get_quiz_page():
-    """Returns the quiz html body,
+def process_vote_question(user_uuid, event) -> dict[str, int]:
+    """Takes in a json event with a user vote and sends to database,
 
-    where the user solves the questions presented
+    :returns: a dictonary with question_id and current vote.
     """
-    return HTMLResponse(html_quiz_solve_page)
+    assert user_uuid is not None
+    question_id = event['question_uuid']
+    vote = event['vote']
+
+    number_of_votes = db.update_question_votes(question_id, user_uuid, vote)
+
+    logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, number_of_votes))
+    return {'ident': question_id, 'votes': number_of_votes}
 
 
-async def get_cookie_or_token(
-    websocket: WebSocket,
-    session: Union[str, None] = Cookie(default=None),
-    token: Union[str, None] = Query(default=None),
-):
-    """Ensure we either have a valid Cookie or token"""
-    if session is None and token is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    return session or token
+def get_user_info(user_uuid) -> dict[str, int]:
+    """Returns additional information about a user, e.g. current Score"""
+    assert user_uuid is not None
+
+    correct_answers_count = len(db.get_ca_by_uuid(user_uuid))
+    incorrect_answers_count = len(db.get_ia_by_uuid(user_uuid))
+    answer_count = correct_answers_count + incorrect_answers_count
+    if answer_count != 0:
+        user_score = 100*correct_answers_count/answer_count
+        user_score_str = '{}/{} = {:.3g}%'.format(correct_answers_count,
+                                                  answer_count,
+                                                  user_score)
+    else:
+        user_score = 0
+        user_score_str = '0'
+
+    submitted_questions = db.get_sq_by_uuid(user_uuid)
+    user_submitted_questions_count = len(submitted_questions)
+
+    submitted_questions_uuids = [item.ident for item in submitted_questions]
+    user_submitted_questions_votes = db.get_total_votes_questions(submitted_questions_uuids)
+
+    ret = {'user_score': user_score_str,
+           'user_submitted_questions_count': user_submitted_questions_count,
+           'user_submitted_questions_votes': user_submitted_questions_votes}
+
+    logger.info('get_user_info(%s) -> %s', user_uuid, ret)
+    return ret
 
 
 @app.websocket("/quiz")
 async def websocket_echo(
         websocket: WebSocket,
 ):
-    """Handle all the shizz"""
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        logger.debug('quiz-received-data: %s', data)
-        event = json.loads(data)
-        if event['type'] == 'token_pls':
-            await websocket.send_json(
-                {
-                    'type': 'auth',
-                    'data': {
-                        'token': secrets.token_urlsafe()
-                    }
-                }
-            )
-        elif event['type'] == 'new_question':
-            print(event['data'])
-            a = process_new_question(event=event['data'])
-            await websocket.send_json(
-                {
-                    'type': 'return',
-                    'data': a
-                }
-            )
-
-
-@app.websocket("/solve_quiz/{item_id}/ws")
-async def websocket_endpoint_quiz(
-    websocket: WebSocket,
-    item_id: str,
-    q: Union[int, None] = None,
-    cookie_or_token: str = Depends(get_cookie_or_token),
-):
-    """Responds to messages posted by user by echoing them back with the token_id"""
+    """Handle all requests from frontend"""
     await websocket.accept()
     while True:
         try:
             data = await websocket.receive_text()
         except Exception as e:
-            logger.exception('receive_text failed: %s', e)
+            logger.info('receive_text failed %s', e)
             break
 
-        logger.debug('received %s', data)
-
-        # Parse what the frontend sent
+        logger.debug('quiz-received-data: %s', data)
         event = json.loads(data)
-        if event['type'] == 'serve_new_question':
-            # Fetch a new question from database and send back to frontend
-            new_question = process_serve_new_question(user=item_id, event=event)
-            d = dict(type="solve_question_text")
-            d.update(new_question)
+        user_uuid = None
+        if 'data' in event and 'password' in event['data']:
+            try:
+                user_uuid = get_or_create_user(event['data']['user_name'],
+                                               event['data']['password'])
+                logger.info('user_uuid %s', user_uuid)
+            except WrongPasswordException as e:
+                await websocket.send_json(
+                    {
+                        'type': 'error',
+                        'data': {
+                            'message': e.message
+                        }
+                    }
+                )
+                return
 
-            await websocket.send_json(d)
-        elif event['type'] == 'new_answer':
-            # User has submitted a result, return if the result is correct or not
-            feedback = process_new_answer(user=item_id, event=event)
-            d = dict(type="answer_feedback_text", data=feedback)
-            await websocket.send_json(d)
+        event_type = event['type']
+        if event_type == 'insert_new_question':
+            a = process_new_question(user_uuid, event=event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'return_new_question',
+                    'data': a
+                }
+            )
+        elif event_type == 'get_question':
+            ret = process_serve_new_question(user_uuid, event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'return_question',
+                    'data': json.dumps(ret)
+                }
+            )
+            if user_uuid is not None:
+                user_info_ret = get_user_info(user_uuid)
+                await websocket.send_json(
+                    {
+                        'type': 'return_user_info',
+                        'data': json.dumps(user_info_ret)
+                    }
+                )
+        elif event_type == 'answered_question':
+            ret = process_new_answer(user_uuid, event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'answered_question_feedback',
+                    'data': ret
+                }
+            )
+            if user_uuid is not None:
+                user_info_ret = get_user_info(user_uuid)
+                await websocket.send_json(
+                    {
+                        'type': 'return_user_info',
+                        'data': json.dumps(user_info_ret)
+                    }
+                )
+        elif event_type == 'vote_question':
+            ret = process_vote_question(user_uuid, event['data'])
+            await websocket.send_json(
+                {
+                    'type': 'vote_feedback',
+                    'data': ret
+                }
+            )
         else:
-            logger.error('Unrecognized type "%s"', event['type'])
-
-
-@app.websocket("/new_question/{item_id}/ws")
-async def websocket_endpoint(
-    websocket: WebSocket,
-    item_id: str,
-    q: Union[int, None] = None,
-    cookie_or_token: str = Depends(get_cookie_or_token),
-):
-    """Responds to new_question events from the frontend, sending the recieved data into the database"""
-    await websocket.accept()
-    while True:
-        data = await websocket.receive_text()
-        logger.debug('received %s', data)
-
-        # For debug, echo back (TODO: Remove)
-        d = dict(type="cookie", data=f"Session cookie or query token value is: {cookie_or_token}")
-        await websocket.send_json(d)
-
-        if q is not None:
-            d = dict(type="query", data=f"Query parameter q is: {q}")
-            await websocket.send_json(d)
-
-        d = dict(type="message", data=f"Message text was: {data}, for item ID: {item_id}")
-        await websocket.send_json(d)
-
-        # Parse what the frontend sent
-        event = json.loads(data)
-        if event['type'] == 'new_question':
-            process_new_question(user=item_id, event=event)
+            logger.error('Unknown event type %s', event_type)
