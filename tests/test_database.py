@@ -59,7 +59,7 @@ class TestDatabase(unittest.TestCase):
         """Add N submitteed questions"""
         questions = self.db.get_all_questions()
 
-        # add incorrect answers:
+        # add submitted questions:
         end = start + number_of_submitted_questions
         for q in questions[start:end]:
             self.db.update_user_sq_by_uuid(user_id, sq=q.ident)
@@ -127,6 +127,27 @@ class TestDatabase(unittest.TestCase):
 
         update_success = self.db.update_user_sv_up_by_uuid(user_id2, sv=q.ident)
         self.assertFalse(update_success, msg='Already added, not did expect this to work the second time around')
+
+    def test_user_submitted_questions_votes(self, nr_questions_to_upvote=3, upvotes=10):
+        """Test total votes for user-submitted questions"""
+        questions = self.db.get_all_questions()
+        user_id = self.db.get_user_by_name('username1').ident
+
+        # Assign questions to user
+        self.add_submitted_questions(user_id, nr_questions_to_upvote, start=0)
+
+        # Set fixed votes:
+        for ix in range(nr_questions_to_upvote):
+            self.db.update_question_votes(question_uuid=questions[ix].ident,
+                                          user_uuid=user_id,
+                                          new_vote_override=upvotes)
+
+        user_questions = self.db.get_sq_by_uuid(user_id)
+        question_uuids = [item.ident for item in user_questions]
+        votes = self.db.get_total_votes_questions(question_uuids)
+
+        expected_votes = nr_questions_to_upvote*upvotes
+        self.assertEqual(votes, expected_votes)
 
 
 if __name__ == '__main__':

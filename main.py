@@ -151,6 +151,36 @@ def process_vote_question(user_uuid, event) -> dict[str, int]:
     return {'ident': question_id, 'votes': number_of_votes}
 
 
+def get_user_info(user_uuid) -> dict[str, int]:
+    """Returns additional information about a user, e.g. current Score"""
+    assert user_uuid is not None
+
+    correct_answers_count = len(db.api.get_ca_by_uuid(user_uuid))
+    incorrect_answers_count = len(db.api.get_ia_by_uuid(user_uuid))
+    answer_count = correct_answers_count + incorrect_answers_count
+    if answer_count != 0:
+        user_score = 100*correct_answers_count/answer_count
+        user_score_str = '{}/{} = {:.3g}%'.format(correct_answers_count,
+                                                  answer_count,
+                                                  user_score)
+    else:
+        user_score = 0
+        user_score_str = '0'
+
+    submitted_questions = db.api.get_sq_by_uuid(user_uuid)
+    user_submitted_questions_count = len(submitted_questions)
+
+    submitted_questions_uuids = [item.ident for item in submitted_questions]
+    user_submitted_questions_votes = db.api.get_total_votes_questions(submitted_questions_uuids)
+
+    ret = {'user_score': user_score_str,
+           'user_submitted_questions_count': user_submitted_questions_count,
+           'user_submitted_questions_votes': user_submitted_questions_votes}
+
+    logger.info('get_user_info(%s) -> %s', user_uuid, ret)
+    return ret
+
+
 @app.websocket("/quiz")
 async def websocket_echo(
         websocket: WebSocket,
@@ -198,7 +228,7 @@ async def websocket_echo(
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
                 {
-                    'type': 'return',
+                    'type': 'return_new_question',
                     'data': a
                 }
             )
@@ -206,10 +236,18 @@ async def websocket_echo(
             ret = process_serve_new_question(user_uuid, event['data'])
             await websocket.send_json(
                 {
-                    'type': 'serve_question',
+                    'type': 'return_question',
                     'data': json.dumps(ret)
                 }
             )
+            if user_uuid is not None:
+                user_info_ret = get_user_info(user_uuid)
+                await websocket.send_json(
+                    {
+                        'type': 'return_user_info',
+                        'data': json.dumps(user_info_ret)
+                    }
+                )
         elif event_type == 'answered_question':
             ret = process_new_answer(user_uuid, event['data'])
             await websocket.send_json(
@@ -218,6 +256,14 @@ async def websocket_echo(
                     'data': ret
                 }
             )
+            if user_uuid is not None:
+                user_info_ret = get_user_info(user_uuid)
+                await websocket.send_json(
+                    {
+                        'type': 'return_user_info',
+                        'data': json.dumps(user_info_ret)
+                    }
+                )
         elif event_type == 'vote_question':
             ret = process_vote_question(user_uuid, event['data'])
             await websocket.send_json(

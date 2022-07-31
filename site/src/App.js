@@ -165,18 +165,21 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {String} userName
  * @param {String} wsMessage
  * @param {Function} getExplanation
- * @param {Function} setSQuestion
  * @param {Object} singleQuestion
  * @param {String} singleQuestion.txt - The question
  * @param {String} singleQuestion.title - Title
  * @param {Number} singleQuestion.difficulty - How difficulty the question is
  * @param {Number} singleQuestion.votes - Amount of votes
  * @param {String} singleQuestion.ident - identifier
+ * @param {String} userScore - User score, based on number of correct guesses
+ * @param {String} userSubmittedQuestionsCount - Number of questions user has submitted
+ * @param {String} userSubmittedQuestionsVotes - Number of votes user submitted questions has received
  *
  * @returns {JSX.Element}
  * @constructor
  */
-const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes }) => {
+const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes,
+               userScore, userSubmittedQuestionsCount, userSubmittedQuestionsVotes}) => {
 
     const handleNextQuestions = () => {
         if (userName.length > 0 && userPassword.length > 0) {
@@ -240,7 +243,15 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
     return (
         <>
         {singleQuestion.title && !error ?
-        <div className="box">
+         <div className="box">
+            <div>
+                <ul className="userInfo">
+                    <li>Username: {userName}</li>
+                    <li>Score: {userScore}</li>
+                    <li>Number of user submitted questions: {userSubmittedQuestionsCount}</li>
+                    <li>Votes for user submitted questions: {userSubmittedQuestionsVotes}</li>
+                </ul>
+            </div>
             <div>
                 <h1 className="main-title">{singleQuestion?.title}</h1>
             </div>
@@ -334,13 +345,16 @@ function MyCoolCodeBlock({ code, language }) {
 }
 
 function App() {
-    const socketURL = useRef('ws://localhost:8000/quiz');
+    const socketURL = useRef(process.env.REACT_APP_BASE_URL || "ws://localhost:8000/quiz");
     const ws = useRef(null);
     //const [token, setToken] = useState('');
     const [error, setError] = useState('');
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
+    const [userScore, setUserScore] = useState('');
+    const [userSubmittedQuestionsCount, setUserSubmittedQuestionsCount] = useState('');
+    const [userSubmittedQuestionsVotes, setUserSubmittedQuestionsVotes] = useState('');
     const [userPassword, setUserPassword] = useState('');
     const [getExplanation, setExplanation] = useState('');
     const [getVotes, setVotes] = useState('0');
@@ -362,19 +376,22 @@ function App() {
             const j_obj = JSON.parse(event.data);
             const type = j_obj.type;
             const data = j_obj.data;
+            let data_parsed = null;
             switch (type) {
                 // case 'auth':
                 //     setToken(data.token);
                 //     break;
-                case 'return':
+                case 'return_new_question':
                     console.log(debugMessage(type, data));
                     setWSMessage(data);
                     break;
-                case 'serve_question':
-                    console.log(debugMessage(type, JSON.parse(data)));
+                case 'return_question':
+                    data_parsed = JSON.parse(data)
+                    console.log(debugMessage(type, data_parsed));
                     setQuestions(oldArray => [...oldArray, data]);
-                    setSQuestion(JSON.parse(data));
+                    setSQuestion(data_parsed);
                     setExplanation('');
+                    setVotes(data_parsed['votes'])
                     break;
                 case 'error':
                     if (Object.keys(data).includes('message')) {
@@ -388,8 +405,16 @@ function App() {
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
-		            setVotes(data['votes'].toString())
+		    setVotes(data['votes'].toString())
                     break;
+                case 'return_user_info':
+                    console.log(debugMessage(type, data));
+                    data_parsed = JSON.parse(data)
+                    setUserScore(data_parsed['user_score'].toString())
+                    setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString())
+                    setUserSubmittedQuestionsVotes(data_parsed['user_submitted_questions_votes'].toString())
+                    break;
+
                 default:
                     console.log(debugMessage(type, data));
             }
@@ -416,6 +441,9 @@ function App() {
         setSQuestion: setSQuestion,
         error: error,
         setError: setError,
+        userScore : userScore,
+        userSubmittedQuestionsCount : userSubmittedQuestionsCount,
+        userSubmittedQuestionsVotes : userSubmittedQuestionsVotes
     }
 
     return (
