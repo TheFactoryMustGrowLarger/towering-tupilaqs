@@ -11,9 +11,7 @@ import React, {useEffect, useRef, useState} from 'react';
  * - 'get_question'
  * - 'answered_question'
  * - 'insert_new_question'
- * - 'get_question'
- * - TODO: Needs to be implemented more
- *  - 'token_pls' - gets token for security
+ * - 'vote_question'
  * @param {String} type
  * @param {Object} data
  *
@@ -40,7 +38,7 @@ const NotFound = () => {
         <div className="box" style={{padding: "5px"}}>
             404 PAGE NOT FOUND
             <button className="bb-button" style={{marginTop: "10px"}}>
-                    <Link to="/">Go home, youre durnk.</Link>
+                    <Link to="/">Go home, you're durnk.</Link>
             </button>
         </div>
     )
@@ -347,7 +345,6 @@ function MyCoolCodeBlock({ code, language }) {
 function App() {
     const socketURL = useRef(process.env.REACT_APP_BASE_URL || "ws://localhost:8000/quiz");
     const ws = useRef(null);
-    //const [token, setToken] = useState('');
     const [error, setError] = useState('');
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
@@ -360,13 +357,11 @@ function App() {
     const [getVotes, setVotes] = useState('0');
     const [singleQuestion, setSQuestion] = useState({});
 
-    // Only runs when connection is open and closed.
     useEffect(() => {
         ws.current = new WebSocket(socketURL.current);
 
         ws.current.onopen = () => {
             console.log('Websocket opened. URL: ', socketURL.current);
-            // ws.current?.send(JSON.stringify({'type': 'token_pls'}));
         }
         ws.current.onclose = () => {
             console.log('Websocket closed. URL: ', socketURL.current);
@@ -378,20 +373,15 @@ function App() {
             const data = j_obj.data;
             let data_parsed = null;
             switch (type) {
-                // case 'auth':
-                //     setToken(data.token);
-                //     break;
                 case 'return_new_question':
-                    console.log(debugMessage(type, data));
                     setWSMessage(data);
                     break;
                 case 'return_question':
                     data_parsed = JSON.parse(data)
-                    console.log(debugMessage(type, data_parsed));
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(data_parsed);
                     setExplanation('');
-                    setVotes(data_parsed['votes'])
+                    setVotes(data_parsed['votes']);
                     break;
                 case 'error':
                     if (Object.keys(data).includes('message')) {
@@ -400,21 +390,17 @@ function App() {
                     }
                     break;
                 case 'answered_question_feedback':
-                    console.log(debugMessage(type, data));
-                    setExplanation(data)
+                    setExplanation(data);
                     break;
                 case 'vote_feedback':
-                    console.log(debugMessage(type, data));
-		    setVotes(data['votes'].toString())
+		            setVotes(data['votes'].toString());
                     break;
                 case 'return_user_info':
-                    console.log(debugMessage(type, data));
-                    data_parsed = JSON.parse(data)
-                    setUserScore(data_parsed['user_score'].toString())
-                    setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString())
-                    setUserSubmittedQuestionsVotes(data_parsed['user_submitted_questions_votes'].toString())
+                    data_parsed = JSON.parse(data);
+                    setUserScore(data_parsed['user_score'].toString());
+                    setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString());
+                    setUserSubmittedQuestionsVotes(data_parsed['user_submitted_questions_votes'].toString());
                     break;
-
                 default:
                     console.log(debugMessage(type, data));
             }
