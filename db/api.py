@@ -708,7 +708,7 @@ class TupilaqsDB:
             if user_ca is not None:
                 ca.extend(user_ca.as_list('submitted_questions'))
 
-            logger.debug('get_ia_by_uuid, incorrect answers = %d: %s', len(ca), ca)
+            logger.debug('get_sq_by_uuid, submitted questions = %d: %s', len(ca), ca)
             all_questions = cur.execute(
                 """
                 SELECT
