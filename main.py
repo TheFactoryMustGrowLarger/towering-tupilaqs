@@ -198,7 +198,7 @@ async def websocket_echo(
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
                 {
-                    'type': 'return',
+                    'type': 'return_new_question',
                     'data': a
                 }
             )
@@ -206,8 +206,19 @@ async def websocket_echo(
             ret = process_serve_new_question(user_uuid, event['data'])
             await websocket.send_json(
                 {
-                    'type': 'serve_question',
+                    'type': 'return_question',
                     'data': json.dumps(ret)
+                }
+            )
+            await websocket.send_json(
+                {
+                    'type': 'return_user_info',
+                    'data': json.dumps(
+                        {'user_score': 0,
+                         'user_submitted_questions_count': 0,
+                         'user_submitted_questions_score': 0
+                         }
+                    )
                 }
             )
         elif event_type == 'answered_question':

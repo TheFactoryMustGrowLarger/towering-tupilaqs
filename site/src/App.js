@@ -172,11 +172,15 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {Number} singleQuestion.difficulty - How difficulty the question is
  * @param {Number} singleQuestion.votes - Amount of votes
  * @param {String} singleQuestion.ident - identifier
+ * @param {String} userScore - User score, based on number of correct guesses
+ * @param {String} userSubmittedQuestionsCount - Number of questions user has submitted
+ * @param {String} userSubmittedQuestionsScore - Number of votes user submitted questions has received
  *
  * @returns {JSX.Element}
  * @constructor
  */
-const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes }) => {
+const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation, error, setError, getVotes,
+               userScore, userSubmittedQuestionsCount, userSubmittedQuestionsScore}) => {
 
     const handleNextQuestions = () => {
         if (userName.length > 0 && userPassword.length > 0) {
@@ -240,7 +244,15 @@ const Box = ({ webSocket, userName, userPassword, singleQuestion, getExplanation
     return (
         <>
         {singleQuestion.title && !error ?
-        <div className="box">
+         <div className="box">
+            <div>
+                <ul className="userInfo">
+                    <li>Username: {userName}</li>
+                    <li>Score: {userScore}</li>
+                    <li>Number of user submitted questions: {userSubmittedQuestionsCount}</li>
+                    <li>Score of user submitted questions: {userSubmittedQuestionsScore}</li>
+                </ul>
+            </div>
             <div>
                 <h1 className="main-title">{singleQuestion?.title}</h1>
             </div>
@@ -341,6 +353,9 @@ function App() {
     const [wsMessage, setWSMessage] = useState('');
     const [questions, setQuestions] = useState([]);
     const [userName, setUserName] = useState('');
+    const [userScore, setUserScore] = useState('');
+    const [userSubmittedQuestionsCount, setUserSubmittedQuestionsCount] = useState('');
+    const [userSubmittedQuestionsScore, setUserSubmittedQuestionsScore] = useState('');
     const [userPassword, setUserPassword] = useState('');
     const [getExplanation, setExplanation] = useState('');
     const [getVotes, setVotes] = useState('0');
@@ -366,11 +381,11 @@ function App() {
                 // case 'auth':
                 //     setToken(data.token);
                 //     break;
-                case 'return':
+                case 'return_new_question':
                     console.log(debugMessage(type, data));
                     setWSMessage(data);
                     break;
-                case 'serve_question':
+                case 'return_question':
                     console.log(debugMessage(type, JSON.parse(data)));
                     setQuestions(oldArray => [...oldArray, data]);
                     setSQuestion(JSON.parse(data));
@@ -388,8 +403,16 @@ function App() {
                     break;
                 case 'vote_feedback':
                     console.log(debugMessage(type, data));
-		            setVotes(data['votes'].toString())
+		    setVotes(data['votes'].toString())
                     break;
+                case 'return_user_info':
+                    console.log(debugMessage(type, data));
+                    const data_parsed = JSON.parse(data)
+                    setUserScore(data_parsed['user_score'].toString())
+                    setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString())
+                    setUserSubmittedQuestionsScore(data_parsed['user_submitted_questions_score'].toString())
+                    break;
+
                 default:
                     console.log(debugMessage(type, data));
             }
@@ -416,6 +439,9 @@ function App() {
         setSQuestion: setSQuestion,
         error: error,
         setError: setError,
+        userScore : userScore,
+        userSubmittedQuestionsCount : userSubmittedQuestionsCount,
+        userSubmittedQuestionsScore : userSubmittedQuestionsScore
     }
 
     return (
