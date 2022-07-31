@@ -5,7 +5,7 @@ services:
     build: site/
     command: npm start
     environment:
-      REACT_APP_BASE_URL: ws://localhost:8000/quiz
+      REACT_APP_BASE_URL: ws://83.229.86.43:8000/quiz
     ports:
       - "3000:3000"
     depends_on:

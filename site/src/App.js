@@ -333,7 +333,7 @@ function MyCoolCodeBlock({ code, language }) {
 }
 
 function App() {
-    const socketURL = useRef(process.env.REACT_APP_BASE_URL);
+    const socketURL = useRef(process.env.REACT_APP_BASE_URL || "ws://localhost:8000/quiz");
     const ws = useRef(null);
     //const [token, setToken] = useState('');
     const [error, setError] = useState('');
