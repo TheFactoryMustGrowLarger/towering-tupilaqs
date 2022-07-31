@@ -165,7 +165,6 @@ const LandingPage = ({ webSocket, setUserName, userName, userPassword, setUserPa
  * @param {String} userName
  * @param {String} wsMessage
  * @param {Function} getExplanation
- * @param {Function} setSQuestion
  * @param {Object} singleQuestion
  * @param {String} singleQuestion.txt - The question
  * @param {String} singleQuestion.title - Title
@@ -334,7 +333,7 @@ function MyCoolCodeBlock({ code, language }) {
 }
 
 function App() {
-    const socketURL = useRef('ws://localhost:8000/quiz');
+    const socketURL = useRef(process.env.REACT_APP_BASE_URL);
     const ws = useRef(null);
     //const [token, setToken] = useState('');
     const [error, setError] = useState('');
