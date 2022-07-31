@@ -1,4 +1,7 @@
-*.git
-*__pycache__
+.git
+__pycache__
 *.log
-*~
+.idea
+images
+venv
+*.md
