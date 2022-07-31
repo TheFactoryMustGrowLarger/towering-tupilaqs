@@ -377,6 +377,7 @@ function App() {
             const j_obj = JSON.parse(event.data);
             const type = j_obj.type;
             const data = j_obj.data;
+            let data_parsed = null;
             switch (type) {
                 // case 'auth':
                 //     setToken(data.token);
@@ -386,10 +387,12 @@ function App() {
                     setWSMessage(data);
                     break;
                 case 'return_question':
-                    console.log(debugMessage(type, JSON.parse(data)));
+                    data_parsed = JSON.parse(data)
+                    console.log(debugMessage(type, data_parsed));
                     setQuestions(oldArray => [...oldArray, data]);
-                    setSQuestion(JSON.parse(data));
+                    setSQuestion(data_parsed);
                     setExplanation('');
+                    setVotes(data_parsed['votes'])
                     break;
                 case 'error':
                     if (Object.keys(data).includes('message')) {
@@ -407,7 +410,7 @@ function App() {
                     break;
                 case 'return_user_info':
                     console.log(debugMessage(type, data));
-                    const data_parsed = JSON.parse(data)
+                    data_parsed = JSON.parse(data)
                     setUserScore(data_parsed['user_score'].toString())
                     setUserSubmittedQuestionsCount(data_parsed['user_submitted_questions_count'].toString())
                     setUserSubmittedQuestionsVotes(data_parsed['user_submitted_questions_votes'].toString())
