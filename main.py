@@ -1,9 +1,7 @@
 import json
-# import secrets
-from typing import Union
 
 import psycopg
-from fastapi import Cookie, FastAPI, Query, WebSocket, status
+from fastapi import FastAPI, WebSocket
 
 from db.api import TupilaqsDB
 from utilites.logger_utility import setup_logger
@@ -214,16 +212,6 @@ async def websocket_echo(
                 return
 
         event_type = event['type']
-        # if event_type == 'token_pls':
-        #     await websocket.send_json(
-        #         {
-        #             'type': 'auth',
-        #             'data': {
-        #                 'token': secrets.token_urlsafe()
-        #             }
-        #         }
-        #     )
-        # el
         if event_type == 'insert_new_question':
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
@@ -274,14 +262,3 @@ async def websocket_echo(
             )
         else:
             logger.error('Unknown event type %s', event_type)
-
-
-async def get_cookie_or_token(
-    websocket: WebSocket,
-    session: Union[str, None] = Cookie(default=None),
-    token: Union[str, None] = Query(default=None),
-):
-    """Ensure we either have a valid Cookie or token"""
-    if session is None and token is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    return session or token
