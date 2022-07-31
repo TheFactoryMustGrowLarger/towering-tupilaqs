@@ -1,6 +1,5 @@
 import json
 
-import psycopg
 from fastapi import FastAPI, WebSocket
 
 from db.api import TupilaqsDB
@@ -9,27 +8,6 @@ from utilites.logger_utility import setup_logger
 logger = setup_logger()
 app = FastAPI()
 db = TupilaqsDB()
-
-
-def __read_file(file_path):
-    with open(file_path, 'r') as file:
-        file_as_string = file.read()
-    return file_as_string
-
-
-problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
-                     ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
-                     ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1)]
-
-
-for script, answer, title, explanation, difficulty in problems_keywords:
-    script = __read_file(f"problems/scripts/{script}")
-    explanation = __read_file(f"problems/explanations/{explanation}")
-    try:
-        db.insert_question(script, answer, title, explanation, difficulty)
-    except psycopg.errors.StringDataRightTruncation as e:
-        logger.error('Too long! %s, script=%s, answer=%s, title=%s, explanation=%s, difficulty=%s',
-                     e, script, answer, title, explanation, difficulty)
 
 
 class WrongPasswordException(Exception):

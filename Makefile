@@ -7,7 +7,8 @@ lint:
 test:
 	poetry run python -m tests.test_database
 	poetry run python -m db.api
-	poetry run python -m doctest example/equal.py
+	poetry run python -m doctest problems/scripts/problem_11_are_equal.py
+	poetry run python -m doctest problems/scripts/problem_12_equal_except_integers.py
 
 install:
 	(cd site;npm install)

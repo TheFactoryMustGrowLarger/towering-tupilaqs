@@ -16,8 +16,16 @@ from db.utils.db_classes import (
 from db.utils.db_tables import (
     create_answers_table, create_questions_table, create_users_table
 )
+from db.utils.official_questions import official_questions
 
 logger = logging.getLogger('tupilaqs.db')
+
+
+def read_file(file_path):
+    """Returns file content"""
+    with open(file_path, 'r') as file:
+        file_as_string = file.read()
+    return file_as_string
 
 
 class TupilaqsDB:
@@ -53,6 +61,17 @@ class TupilaqsDB:
             raise e
         return conn
 
+    def __add_official_questions(self, initial_votes=10):
+        """Adds some intial questions to the database from the problems/ folder"""
+        for script, answer, title, explanation, difficulty in official_questions:
+            script = read_file(script)
+            explanation = read_file(explanation)
+            try:
+                self.insert_question(script, answer, title, explanation, difficulty, votes=initial_votes)
+            except errors.StringDataRightTruncation as e:
+                logger.error('Too long! %s, script=%s, answer=%s, title=%s, explanation=%s, difficulty=%s',
+                             e, script, answer, title, explanation, difficulty)
+
     def __initiate_database(self) -> None:
         """**Initiates database.**
 
@@ -77,6 +96,8 @@ class TupilaqsDB:
                 logger.info("Added `answers` table to DB.")
                 cur.execute(create_users_table)
                 logger.info("Added `users` table to DB.")
+
+        self.__add_official_questions()
 
     def insert_question(
             self,
@@ -127,6 +148,7 @@ class TupilaqsDB:
                         'ident': unique_id,
                     }
                 )
+                logger.debug('Added question %s: %s', question.title, question.ident)
                 return question
 
     def delete_question(self, uuid: str) -> tuple:
