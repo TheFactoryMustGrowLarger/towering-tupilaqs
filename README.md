@@ -27,6 +27,7 @@ original repository used for most of the jam got deleted or hidden, so pull requ
 Install docker for your operating system: https://docs.docker.com/get-docker/
 
 Linux/Ubuntu
+in docker-compose.yml, edit the `REACT_APP_BASE_URL` websocket to match your servers ip, or use localhost for development.
 ```
 sudo snap install docker
 sudo docker-compose up
