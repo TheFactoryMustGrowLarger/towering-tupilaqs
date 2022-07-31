@@ -1,6 +1,5 @@
 # TODO
 
-- Skip `db.api.initiate_database()` in production to avoid clearing database
 - Nicer frontend (Assigned to Hels15)
 - - Show difficulty level as string
 - - Prettify "Upvote question" button
@@ -32,6 +31,7 @@ in docker-compose.yml, edit the `REACT_APP_BASE_URL` websocket to match your ser
 sudo snap install docker
 sudo docker-compose up
 ```
+first time, ensure db/db_config/database_docker.ini has `should_initialize_database=True` so the database gets initialized.
 
 ## Manual install
 [poetry](https://python-poetry.org/) is used for dependency management. Follow the install guide for your system:
@@ -83,6 +83,7 @@ or Linux:
 cp db/db_config/database_remote.ini db/db_config/database.ini
 ```
 
+the variable `should_initialize_database` controls if the database gets cleared when the application starts (should be True for development and is default False in the database_docker.ini.). WARNING: This is set to True when running tests, so ensure you are not testing against your production database.
 
 ### Manual install - Node install
 #### Node Linux setup

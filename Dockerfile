@@ -16,7 +16,3 @@ COPY poetry.lock pyproject.toml .dockerignore /code/
 RUN /root/.local/bin/poetry install --no-interaction --no-ansi
 
 COPY . /code
-
-# replace the database.ini file with the docker version
-#COPY db/db_config/database_docker.ini /code/db/db_config/database.ini
-#RUN make install_docker

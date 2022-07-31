@@ -26,7 +26,6 @@ services:
     image: postgres
     restart: always
     environment:
-# POSTGRES_PASSWORD_FILE=/run/secrets/postgres-passwd
       POSTGRES_PASSWORD: quiz
       POSTGRES_USER: quiz
       POSTGRES_DB: quiz

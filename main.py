@@ -1,12 +1,14 @@
 import json
-# import secrets
-from typing import Union
 
 import psycopg
-from fastapi import Cookie, FastAPI, Query, WebSocket, status
+from fastapi import FastAPI, WebSocket
 
-import db.api
+from db.api import TupilaqsDB
 from utilites.logger_utility import setup_logger
+
+logger = setup_logger()
+app = FastAPI()
+db = TupilaqsDB()
 
 
 def __read_file(file_path):
@@ -15,10 +17,6 @@ def __read_file(file_path):
     return file_as_string
 
 
-logger = setup_logger()
-app = FastAPI()
-# FIXME: Should only be done once, clears the database
-db.api.initiate_database()
 problems_keywords = [("problem_1_multiplication.py", 'Feature', 'Multiplication', "problem_1_explanation.md", 0),
                      ("problem_2_square_of_a_number.py", 'Bug', 'Square of a number', "problem_2_explanation.md", 0),
                      ("problem_3_slot_machine.py", 'Bug', 'Slot machine', "problem_3_explanation.md", 1)]
@@ -28,7 +26,7 @@ for script, answer, title, explanation, difficulty in problems_keywords:
     script = __read_file(f"problems/scripts/{script}")
     explanation = __read_file(f"problems/explanations/{explanation}")
     try:
-        db.api.insert_question(script, answer, title, explanation, difficulty)
+        db.insert_question(script, answer, title, explanation, difficulty)
     except psycopg.errors.StringDataRightTruncation as e:
         logger.error('Too long! %s, script=%s, answer=%s, title=%s, explanation=%s, difficulty=%s',
                      e, script, answer, title, explanation, difficulty)
@@ -51,14 +49,14 @@ class InvalidQuestionIDException(Exception):
 
 def get_or_create_user(user: str, password: str) -> str:
     """Returns user uuid, if the user does not exist, it will be created"""
-    u = db.api.get_user_by_name(user)
+    u = db.get_user_by_name(user)
     if u is not None:
-        if db.api.check_password(user, password):
+        if db.check_password(user, password):
             return u.ident
         else:
             raise WrongPasswordException()
     else:
-        return db.api.add_user(user, password)
+        return db.add_user(user, password)
 
 
 def process_new_question(user_uuid, event) -> str:
@@ -79,10 +77,10 @@ def process_new_question(user_uuid, event) -> str:
 
     logger.info('Inserting %s by user uuid %s', database_insert, user_uuid)
 
-    question = db.api.insert_question(**database_insert)
+    question = db.insert_question(**database_insert)
 
     # add question uuid to User, so we know who submitted it and can calculate score based on good questions
-    db.api.update_user_sq_by_uuid(user_uuid, sq=str(question.ident))
+    db.update_user_sq_by_uuid(user_uuid, sq=str(question.ident))
 
     ret = "Added `{title}` to the database with UUID {unique_id}.".format(title=question.title,
                                                                           unique_id=question.ident)
@@ -92,7 +90,7 @@ def process_new_question(user_uuid, event) -> str:
 def process_serve_new_question(user_uuid, event) -> dict:
     """Takes in a json event, assumed to contain 'user_name' field and requests a new question from the database"""
     try:
-        question = db.api.get_new_question_for_user(user_uuid)
+        question = db.get_new_question_for_user(user_uuid)
         result = {'txt': question.txt,
                   'title': question.title,
                   'votes': question.votes,
@@ -118,17 +116,17 @@ def process_new_answer(user_uuid, event) -> str:
     question_uuid = event['question_uuid']
     user_answer = event['user_answer']
 
-    question = db.api.get_single_question(question_uuid)
+    question = db.get_single_question(question_uuid)
     if question is None:
         raise InvalidQuestionIDException('Bug, could not find question corresponding to %s' % question_uuid)
 
     correct_answer = question.answer
     if user_answer.lower() == correct_answer.lower():
         ret = 'Correct!'
-        db.api.update_user_ca_by_uuid(user_uuid, ca=question.ident)
+        db.update_user_ca_by_uuid(user_uuid, ca=question.ident)
     else:
         ret = 'Sorry, this was a "%s".' % correct_answer
-        db.api.update_user_ia_by_uuid(user_uuid, ia=question.ident)
+        db.update_user_ia_by_uuid(user_uuid, ia=question.ident)
 
     ret += '\n%s' % question.expl
 
@@ -145,7 +143,7 @@ def process_vote_question(user_uuid, event) -> dict[str, int]:
     question_id = event['question_uuid']
     vote = event['vote']
 
-    number_of_votes = db.api.update_question_votes(question_id, user_uuid, vote)
+    number_of_votes = db.update_question_votes(question_id, user_uuid, vote)
 
     logger.info('process_vote_question(%s, %s) -> %s' % (question_id, vote, number_of_votes))
     return {'ident': question_id, 'votes': number_of_votes}
@@ -155,8 +153,8 @@ def get_user_info(user_uuid) -> dict[str, int]:
     """Returns additional information about a user, e.g. current Score"""
     assert user_uuid is not None
 
-    correct_answers_count = len(db.api.get_ca_by_uuid(user_uuid))
-    incorrect_answers_count = len(db.api.get_ia_by_uuid(user_uuid))
+    correct_answers_count = len(db.get_ca_by_uuid(user_uuid))
+    incorrect_answers_count = len(db.get_ia_by_uuid(user_uuid))
     answer_count = correct_answers_count + incorrect_answers_count
     if answer_count != 0:
         user_score = 100*correct_answers_count/answer_count
@@ -167,11 +165,11 @@ def get_user_info(user_uuid) -> dict[str, int]:
         user_score = 0
         user_score_str = '0'
 
-    submitted_questions = db.api.get_sq_by_uuid(user_uuid)
+    submitted_questions = db.get_sq_by_uuid(user_uuid)
     user_submitted_questions_count = len(submitted_questions)
 
     submitted_questions_uuids = [item.ident for item in submitted_questions]
-    user_submitted_questions_votes = db.api.get_total_votes_questions(submitted_questions_uuids)
+    user_submitted_questions_votes = db.get_total_votes_questions(submitted_questions_uuids)
 
     ret = {'user_score': user_score_str,
            'user_submitted_questions_count': user_submitted_questions_count,
@@ -214,16 +212,6 @@ async def websocket_echo(
                 return
 
         event_type = event['type']
-        # if event_type == 'token_pls':
-        #     await websocket.send_json(
-        #         {
-        #             'type': 'auth',
-        #             'data': {
-        #                 'token': secrets.token_urlsafe()
-        #             }
-        #         }
-        #     )
-        # el
         if event_type == 'insert_new_question':
             a = process_new_question(user_uuid, event=event['data'])
             await websocket.send_json(
@@ -274,14 +262,3 @@ async def websocket_echo(
             )
         else:
             logger.error('Unknown event type %s', event_type)
-
-
-async def get_cookie_or_token(
-    websocket: WebSocket,
-    session: Union[str, None] = Cookie(default=None),
-    token: Union[str, None] = Query(default=None),
-):
-    """Ensure we either have a valid Cookie or token"""
-    if session is None and token is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-    return session or token

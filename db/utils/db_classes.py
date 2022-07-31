@@ -2,10 +2,22 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Question:
+class QuestionPull:
     """Question Type struct"""
 
     id: int
+    txt: str
+    title: str
+    expl: str
+    difficulty: int
+    ident: str
+    votes: int
+
+
+@dataclass
+class QuestionInsert:
+    """Question Type struct"""
+
     txt: str
     title: str
     expl: str
