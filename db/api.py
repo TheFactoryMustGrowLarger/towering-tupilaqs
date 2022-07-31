@@ -247,31 +247,36 @@ def update_question_difficulty(uuid: str, diff: int) -> bool:
             return True
 
 
-def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add') -> int:
+def update_question_votes(question_uuid: str, user_uuid: str, votes: str = 'add', new_vote_override: int = -1) -> int:
     """**Update QUESTION `VOTES`.**
 
     :param question_uuid: Needs to be in string format for comparison
     :param votes: Either 'add' or 'sub' / Add or Subtract
+    :param new_vote_override: Allows setting a absolute value, ignores votes param. Usefull for testing.
     :return: the updated number of votes
     """
+    # FIXME: Support downvote, maybe only as a 'remove' upvote?
     with __conn_singleton() as conn:
         with conn.cursor() as cur:
             current_votes = get_single_question(question_uuid).votes
             vote_success = update_user_sv_up_by_uuid(user_uuid, sv=question_uuid)
             logger.info('update_question_votes(%s, %s, %s). Current votes %d, vote_success = %s',
                         question_uuid, user_uuid, votes, current_votes, vote_success)
-            # Has the user already voted?
-            # FIXME: Support downvote, maybe only as a 'remove' upvote?
-            if vote_success is False:
-                return current_votes
 
-            new_votes = 0
-            if votes == 'add':
-                new_votes = current_votes + 1
-            elif votes == 'sub' and current_votes > 0:
-                new_votes = current_votes - 1
+            if new_vote_override != -1:
+                new_votes = new_vote_override
             else:
-                new_votes = current_votes
+                # Has the user already voted?
+                if vote_success is False:
+                    return current_votes
+
+                new_votes = 0
+                if votes == 'add':
+                    new_votes = current_votes + 1
+                elif votes == 'sub' and current_votes > 0:
+                    new_votes = current_votes - 1
+                else:
+                    new_votes = current_votes
 
             cur.execute(
                 """
@@ -548,6 +553,22 @@ def get_all_questions(limit: int = 10) -> list[Combined]:
             }
         ).fetchall()
         return results
+
+
+def get_total_votes_questions(questions: list[str]) -> int:
+    """**Returns number of votes for given list of questions uuids**...
+
+    :param questions: List of question uuids
+    :return: total vote
+    """
+    # FIXME: future improvement, do this in sql for improved performance
+    votes = 0
+    for question_uuid in questions:
+        question = get_single_question(question_uuid)
+        votes += question.votes
+
+    logger.info('get_total_votes_questions(%s) -> %s', questions, votes)
+    return votes
 
 
 def get_ca_by_uuid(uuid: str) -> list[Question]:
