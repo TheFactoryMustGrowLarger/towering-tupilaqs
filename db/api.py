@@ -10,7 +10,8 @@ from psycopg.rows import class_row
 # This project
 from db.db_config.config import config
 from db.utils.db_classes import (
-    Combined, Question, User, UserCA, UserIA, UserSQ, UserSV
+    Combined, QuestionInsert, QuestionPull, User, UserCA, UserIA, UserSQ,
+    UserSV
 )
 from db.utils.db_tables import (
     create_answers_table, create_questions_table, create_users_table
@@ -39,10 +40,11 @@ class TupilaqsDB:
         conn = ""
         conf = self.conf
         try:
-            conn = connect(host=conf['host'],
-                           dbname=conf['dbname'],
-                           user=conf['user'],
-                           password=conf['password'])
+            conn = connect(
+                host=conf['host'],
+                dbname=conf['dbname'],
+                user=conf['user'],
+                password=conf['password'])
         except errors.ConnectionDoesNotExist as e:
             logger.exception('db connect failed %s', conf)
             print(e)
@@ -76,14 +78,14 @@ class TupilaqsDB:
                 cur.execute(create_users_table)
                 logger.info("Added `users` table to DB.")
 
-    def insert_question(self,
-                        question: str,
-                        answer: str,
-                        title: str,
-                        expl: str,
-                        diff: int = 0,
-                        votes: int = 0
-                        ) -> Question:
+    def insert_question(
+            self,
+            question: str,
+            answer: str,
+            title: str,
+            expl: str,
+            diff: int = 0,
+            votes: int = 0) -> QuestionInsert:
         """**Insert a record database.**
 
         :param question:
@@ -96,13 +98,13 @@ class TupilaqsDB:
         # FIXME: Can this updated to check for duplicate question text?
         # Not sure if it should be rejected or allowed to update.
         unique_id = uuid4()
-        question = Question(txt=question,
-                            title=title,
-                            expl=expl,
-                            difficulty=diff,
-                            votes=votes,
-                            id=0,
-                            ident=str(unique_id))
+        question = QuestionInsert(
+            txt=question,
+            title=title,
+            expl=expl,
+            difficulty=diff,
+            votes=votes,
+            ident=str(unique_id))
 
         with self.__conn_singleton() as conn:
             with conn.cursor() as cur:
@@ -111,7 +113,7 @@ class TupilaqsDB:
                     INSERT INTO
                         questions (TXT, TITLE, EXPL, DIFFICULTY, VOTES, IDENT)
                     VALUES
-                        ( %(txt)s, %(title)s, %(expl)s, %(difficulty)s, %(votes)s, %(id)s )
+                        ( %(txt)s, %(title)s, %(expl)s, %(difficulty)s, %(votes)s, %(ident)s )
                 """, question.__dict__
                 )
                 cur.execute(
@@ -258,12 +260,12 @@ class TupilaqsDB:
                 )
                 return True
 
-    def update_question_votes(self,
-                              question_uuid: str,
-                              user_uuid: str,
-                              votes: str = 'add',
-                              new_vote_override: int = -1
-                              ) -> int:
+    def update_question_votes(
+            self,
+            question_uuid: str,
+            user_uuid: str,
+            votes: str = 'add',
+            new_vote_override: int = -1) -> int:
         """**Update QUESTION `VOTES`.**
 
         :param user_uuid:
@@ -277,8 +279,9 @@ class TupilaqsDB:
             with conn.cursor() as cur:
                 current_votes = self.get_single_question(question_uuid).votes
                 vote_success = self.update_user_sv_up_by_uuid(user_uuid, sv=question_uuid)
-                logger.info('update_question_votes(%s, %s, %s). Current votes %d, vote_success = %s',
-                            question_uuid, user_uuid, votes, current_votes, vote_success)
+                logger.info(
+                    'update_question_votes(%s, %s, %s). Current votes %d, vote_success = %s',
+                    question_uuid, user_uuid, votes, current_votes, vote_success)
 
                 if new_vote_override != -1:
                     new_votes = new_vote_override
@@ -578,7 +581,7 @@ class TupilaqsDB:
         logger.info('get_total_votes_questions(%s) -> %s', questions, votes)
         return votes
 
-    def get_ca_by_uuid(self, uuid: str) -> list[Question]:
+    def get_ca_by_uuid(self, uuid: str) -> list[QuestionPull]:
         """**Returns players already correct answers by uuid**...
 
         :param uuid: User uuid aka ident
@@ -599,7 +602,7 @@ class TupilaqsDB:
                 }
             ).fetchone()
             cur.close()
-            cur = conn.cursor(row_factory=class_row(Question))
+            cur = conn.cursor(row_factory=class_row(QuestionPull))
 
             ca = list()
             if user_ca is not None:
@@ -618,7 +621,7 @@ class TupilaqsDB:
             ).fetchall()
             return [result for result in all_questions if result.ident in ca]
 
-    def get_ia_by_uuid(self, uuid: str) -> list[Question]:
+    def get_ia_by_uuid(self, uuid: str) -> list[QuestionPull]:
         """**Returns players already incorrect answers by uuid**...
 
         :param uuid: User uuid aka ident
@@ -639,7 +642,7 @@ class TupilaqsDB:
                 }
             ).fetchone()
             cur.close()
-            cur = conn.cursor(row_factory=class_row(Question))
+            cur = conn.cursor(row_factory=class_row(QuestionPull))
             ca = list()
             if user_ca is not None:
                 ca.extend(user_ca.as_list('incorrect_answers'))
@@ -657,7 +660,7 @@ class TupilaqsDB:
             ).fetchall()
             return [result for result in all_questions if result.ident in ca]
 
-    def get_sq_by_uuid(self, uuid: str) -> list[Question]:
+    def get_sq_by_uuid(self, uuid: str) -> list[QuestionPull]:
         """**Returns players submitted questions by uuid**...
 
         :param uuid: User uuid aka ident
@@ -678,7 +681,7 @@ class TupilaqsDB:
                 }
             ).fetchone()
             cur.close()
-            cur = conn.cursor(row_factory=class_row(Question))
+            cur = conn.cursor(row_factory=class_row(QuestionPull))
             ca = list()
             if user_ca is not None:
                 ca.extend(user_ca.as_list('submitted_questions'))
@@ -696,7 +699,7 @@ class TupilaqsDB:
             ).fetchall()
             return [result for result in all_questions if result.ident in ca]
 
-    def get_new_question_for_user(self, uuid: str, desc: bool = True) -> Question:
+    def get_new_question_for_user(self, uuid: str, desc: bool = True) -> QuestionPull:
         """**Returns a new question for player, ensuring it has not been answered before**...
 
         :param desc:
@@ -732,7 +735,7 @@ class TupilaqsDB:
 
             logger.debug('get_new_question_for_user, answers = %d: %s', len(answers), answers)
 
-            cur = conn.cursor(row_factory=class_row(Question))
+            cur = conn.cursor(row_factory=class_row(QuestionPull))
             all_questions = cur.execute(
                 """
                 SELECT
@@ -748,7 +751,7 @@ class TupilaqsDB:
 
             return applicable_questions[0]
 
-    def get_ca_by_name(self, user_name: str) -> list[Question]:
+    def get_ca_by_name(self, user_name: str) -> list[QuestionPull]:
         """**Returns players already correct answers by user_name**...
 
         :param user_name: Username
@@ -769,7 +772,7 @@ class TupilaqsDB:
                 }
             ).fetchone()
             cur.close()
-            cur = conn.cursor(row_factory=class_row(Question))
+            cur = conn.cursor(row_factory=class_row(QuestionPull))
             ca = list()
             if user_ca is not None:
                 ca.extend(user_ca.as_list('correct_answers'))
@@ -922,8 +925,9 @@ class TupilaqsDB:
 
                 if results is not None:
                     password_match = results.password == password
-                    logger.debug('password check %s == %s: %s', results.password, password,
-                                 password_match)
+                    logger.debug(
+                        'password check %s == %s: %s', results.password, password,
+                        password_match)
                     return password_match
 
                 return False
