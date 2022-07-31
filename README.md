@@ -1,9 +1,12 @@
 # TODO
 
+- Skip `db.api.initiate_database()` in production to avoid clearing database
 - Nicer frontend (Assigned to Hels15)
-- should probably not clear the database every time the program runs
-- Support difficulty
-- Support showing score (upvotes) for current user submitted questions
+- - Show difficulty level as string
+- - Prettify "Upvote question" button
+- - Prettify "Next question" button
+- - Question submission - Larger text area for code (Assigned to Jock)
+- - Question submission - Make "Bug"/"Feature" a dropdown or some other way of ensuring user can only enter either "Bug" or "Feature".
 
 # Tower Tupilaqs
 ![Tupilaqs in Paris](images/tower-tupilaqs-paris.jpg)
