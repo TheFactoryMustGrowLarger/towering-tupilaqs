@@ -170,11 +170,12 @@ def get_user_info(user_uuid) -> dict[str, int]:
     submitted_questions = db.api.get_sq_by_uuid(user_uuid)
     user_submitted_questions_count = len(submitted_questions)
 
-    user_submitted_questions_score = -1  # FIXME
+    submitted_questions_uuids = [item.ident for item in submitted_questions]
+    user_submitted_questions_votes = db.api.get_total_votes_questions(submitted_questions_uuids)
 
     ret = {'user_score': user_score_str,
            'user_submitted_questions_count': user_submitted_questions_count,
-           'user_submitted_questions_votes': user_submitted_questions_score}
+           'user_submitted_questions_votes': user_submitted_questions_votes}
 
     logger.info('get_user_info(%s) -> %s', user_uuid, ret)
     return ret
