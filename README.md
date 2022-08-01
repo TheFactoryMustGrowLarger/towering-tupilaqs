@@ -80,7 +80,7 @@ to db/db_config/database.ini.
 
 e.g. on Windows:
 ```
-xcopy /f /y db/db_config/database_remote.ini db/db_config/database.ini
+xcopy .\db\db_config\database_remote.ini .\db\db_config\database.ini /f /y
 ```
 or Linux:
 ```
