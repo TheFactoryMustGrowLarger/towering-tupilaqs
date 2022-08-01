@@ -126,12 +126,11 @@ poetry run uvicorn main:app --reload
 also available as `make serve` if you have make.
 
 # View and Play
-This should serve webpages:
+This should serve:
 
 - http://127.0.0.1:3000
-- TODO: Remove http://127.0.0.1:8000/solve_quiz?
 
-Python code will log to `tupilaqs.log`.
+For debug, the python code will log to `tupilaqs.log`.
 
 
 # Difficulty Levels
