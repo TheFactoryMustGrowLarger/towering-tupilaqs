@@ -21,6 +21,10 @@ Quiz game to determine if a piece of code is a bug or a feature for Python Disco
 Hosted on Kamatera as long as the free trial lasts: [Quiz page](http://83-229-86-43.cloud-xip.io:3000/)
 
 original repository used for most of the jam got deleted or hidden, so pull request history is lost: [github.com/Devansh3712/towering-tupilaq](https://github.com/Devansh3712/towering-tupilaq)
+
+## Program flow and libraries used
+![Program flow](images/tower-tupilaqs-quiz-flow.png)
+
 # Requirements
 ## Docker installation
 Install docker for your operating system: https://docs.docker.com/get-docker/
@@ -76,7 +80,7 @@ to db/db_config/database.ini.
 
 e.g. on Windows:
 ```
-xcopy /f /y db/db_config/database_remote.ini db/db_config/database.ini
+xcopy .\db\db_config\database_remote.ini .\db\db_config\database.ini /f /y
 ```
 or Linux:
 ```
@@ -122,12 +126,11 @@ poetry run uvicorn main:app --reload
 also available as `make serve` if you have make.
 
 # View and Play
-This should serve webpages:
+This should serve:
 
 - http://127.0.0.1:3000
-- TODO: Remove http://127.0.0.1:8000/solve_quiz?
 
-Python code will log to `tupilaqs.log`.
+For debug, the python code will log to `tupilaqs.log`.
 
 
 # Difficulty Levels
