@@ -127,8 +127,8 @@ For debug, the python code will log to `tupilaqs.log`.
 # TODO
 
 - Nicer frontend (Assigned to Hels15)
-- - Show difficulty level as string
-- - Prettify "Upvote question" button
-- - Prettify "Next question" button
-- - Question submission - Larger text area for code (Assigned to Jock)
-- - Question submission - Make "Bug"/"Feature" a dropdown or some other way of ensuring user can only enter either "Bug" or "Feature".
+  - Show difficulty level as string
+  - Prettify "Upvote question" button
+  - Prettify "Next question" button
+  - Question submission - Larger text area for code (Assigned to Jock)
+  - Question submission - Make "Bug"/"Feature" a dropdown or some other way of ensuring user can only enter either "Bug" or "Feature".
