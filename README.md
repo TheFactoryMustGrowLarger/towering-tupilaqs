@@ -1,12 +1,3 @@
-# TODO
-
-- Nicer frontend (Assigned to Hels15)
-- - Show difficulty level as string
-- - Prettify "Upvote question" button
-- - Prettify "Next question" button
-- - Question submission - Larger text area for code (Assigned to Jock)
-- - Question submission - Make "Bug"/"Feature" a dropdown or some other way of ensuring user can only enter either "Bug" or "Feature".
-
 # Tower Tupilaqs
 ![Tupilaqs in Paris](images/tower-tupilaqs-paris.jpg)
 
@@ -133,19 +124,11 @@ This should serve:
 For debug, the python code will log to `tupilaqs.log`.
 
 
-# Difficulty Levels
-### Very Easy
-- Basic concepts
-- Few lines of code
-### Easy
-- Basic concepts
-- Medium Size Code
-### Medium
-- Intermediate concepts
-- Medium Size Code
-### Hard
-- Advanced concepts
-- Medium Size Code
-### Very Hard
-- Advanced concepts
-- A lot of lines of code
+# TODO
+
+- Nicer frontend (Assigned to Hels15)
+- - Show difficulty level as string
+- - Prettify "Upvote question" button
+- - Prettify "Next question" button
+- - Question submission - Larger text area for code (Assigned to Jock)
+- - Question submission - Make "Bug"/"Feature" a dropdown or some other way of ensuring user can only enter either "Bug" or "Feature".
