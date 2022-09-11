@@ -9,8 +9,6 @@ Image credit: Adapted from
 ## Introduction
 Quiz game to determine if a piece of code is a bug or a feature for Python Discord Code Jam 2022.
 
-Hosted on Kamatera as long as the free trial lasts: [Quiz page](http://83-229-86-43.cloud-xip.io:3000/)
-
 original repository used for most of the jam got deleted or hidden, so pull request history is lost: [github.com/Devansh3712/towering-tupilaq](https://github.com/Devansh3712/towering-tupilaq)
 
 ## Program flow and libraries used
